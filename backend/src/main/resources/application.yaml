@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: backend
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    redis:
+      enabled: false
+    kafka:
+      enabled: false

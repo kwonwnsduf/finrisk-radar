@@ -1,0 +1,39 @@
+# Environment variables
+.env
+.env.*
+!.env.local.example
+
+# IDE and editor
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# Operating system
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Java and Gradle
+.gradle/
+build/
+out/
+*.class
+
+# Node.js and Next.js
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
