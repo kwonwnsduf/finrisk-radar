@@ -3,10 +3,14 @@ spring:
     name: backend
 
 management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus
   health:
     redis:
       enabled: false
