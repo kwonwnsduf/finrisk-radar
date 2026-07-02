@@ -4,6 +4,7 @@ import com.finrisk.radar.global.response.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +39,14 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 				.status(errorCode.getHttpStatus())
 				.body(ApiResponse.error(errorCode, errors));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ApiResponse<Void>> handleUnreadableMessage(HttpMessageNotReadableException exception) {
+		ErrorCode errorCode = ErrorCode.INVALID_INPUT;
+		return ResponseEntity
+				.status(errorCode.getHttpStatus())
+				.body(ApiResponse.error(errorCode, null));
 	}
 
 	@ExceptionHandler(Exception.class)

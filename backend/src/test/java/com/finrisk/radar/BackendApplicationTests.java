@@ -1,11 +1,14 @@
 package com.finrisk.radar;
 
+import com.finrisk.radar.user.UserRepository;
+import com.finrisk.radar.watchlist.WatchlistRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -18,11 +21,22 @@ import static org.hamcrest.Matchers.containsString;
 				+ "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
 				+ "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
 				+ "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration",
-		"management.health.diskspace.enabled=false"
+		"management.health.diskspace.enabled=false",
+		"jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+		"jwt.access-token-expiration=30m",
+		"jwt.refresh-token-expiration=14d",
+		"spring.security.oauth2.client.registration.google.client-id=test-client",
+		"spring.security.oauth2.client.registration.google.client-secret=test-secret"
 })
 @AutoConfigureObservability
 @AutoConfigureMockMvc
 class BackendApplicationTests {
+
+	@MockitoBean
+	private UserRepository userRepository;
+
+	@MockitoBean
+	private WatchlistRepository watchlistRepository;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -33,11 +47,20 @@ class BackendApplicationTests {
 
 	@Test
 	void apiHealthReturnsSuccessResponse() throws Exception {
-		mockMvc.perform(get("/api/health"))
+		mockMvc.perform(get("/api/health")
+						.header("Authorization", "Bearer invalid-token"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.code").value("SUCCESS"))
 				.andExpect(jsonPath("$.data").value("UP"));
+	}
+
+	@Test
+	void currentUserRequiresAuthentication() throws Exception {
+		mockMvc.perform(get("/api/users/me"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.code").value("AUTH_003"));
 	}
 
 	@Test

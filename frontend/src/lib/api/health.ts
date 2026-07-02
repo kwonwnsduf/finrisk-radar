@@ -1,11 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-
-export interface ApiResponse<T> {
-  success: boolean;
-  code: string;
-  message: string;
-  data: T;
-}
+import type { ApiResponse } from "@/lib/auth/types";
 
 export async function getBackendHealth() {
   const response = await apiClient.get<ApiResponse<string>>("/api/health");

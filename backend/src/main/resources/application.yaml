@@ -1,6 +1,26 @@
 spring:
   application:
     name: backend
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+oauth:
+  frontend-redirect-uri: ${OAUTH_FRONTEND_REDIRECT_URI:http://localhost:3000/login}
+  code-ttl: ${OAUTH_CODE_TTL:180s}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:30m}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:14d}
 
 management:
   prometheus:

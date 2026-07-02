@@ -1,12 +1,36 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/store/ui-store";
+import { useAuthStore } from "@/store/auth-store";
+import { logout } from "@/lib/api/auth";
+import { clearAuthSession } from "@/lib/auth/session";
 
 export function Header() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const user = useAuthStore((state) => state.user);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch {
+      // Local credentials are always removed even if server logout fails.
+    } finally {
+      clearAuthSession();
+      queryClient.clear();
+      router.replace("/login");
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 md:px-8">
@@ -33,9 +57,14 @@ export function Header() {
         <Button type="button" size="icon" variant="ghost" aria-label="알림">
           <Bell className="size-5" />
         </Button>
-        <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-          FR
+        <div className="hidden text-right sm:block">
+          <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
+          <p className="text-xs text-slate-500">{user?.email}</p>
         </div>
+        <Button type="button" size="sm" variant="ghost" onClick={handleLogout} disabled={isLoggingOut}>
+          <LogOut className="size-4" aria-hidden="true" />
+          {isLoggingOut ? "로그아웃 중" : "로그아웃"}
+        </Button>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@ import { ShieldCheck, WalletCards } from "lucide-react";
 import { CommonChart, type ChartPoint } from "@/components/common/common-chart";
 import { DashboardCard } from "@/components/common/dashboard-card";
 import { BackendHealthCard } from "@/components/dashboard/backend-health-card";
+import { SubscriptionUsageSection } from "@/components/subscription/subscription-usage-section";
 
 const sampleRiskData: ChartPoint[] = [
   { label: "월", value: 42 },
@@ -39,6 +40,8 @@ export default function DashboardPage() {
           icon={<ShieldCheck className="size-5" aria-hidden="true" />}
         />
       </section>
+
+      <SubscriptionUsageSection />
 
       <section className="mt-6">
         <CommonChart

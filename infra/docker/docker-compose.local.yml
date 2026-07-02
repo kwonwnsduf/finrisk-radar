@@ -103,6 +103,11 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
+      OAUTH_FRONTEND_REDIRECT_URI: ${OAUTH_FRONTEND_REDIRECT_URI:-http://localhost:3000/login}
+      OAUTH_CODE_TTL: ${OAUTH_CODE_TTL:-180s}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
@@ -127,10 +132,12 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/backend-api}
+        NEXT_PUBLIC_OAUTH_BASE_URL: ${NEXT_PUBLIC_OAUTH_BASE_URL:-http://localhost:8080}
         BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8080}
     environment:
       BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8080}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/backend-api}
+      NEXT_PUBLIC_OAUTH_BASE_URL: ${NEXT_PUBLIC_OAUTH_BASE_URL:-http://localhost:8080}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
