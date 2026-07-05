@@ -1,5 +1,6 @@
 package com.finrisk.radar;
 
+import com.finrisk.radar.asset.AssetRepository;
 import com.finrisk.radar.user.UserRepository;
 import com.finrisk.radar.watchlist.WatchlistRepository;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,9 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private WatchlistRepository watchlistRepository;
+
+	@MockitoBean
+	private AssetRepository assetRepository;
 
 	@Autowired
 	private MockMvc mockMvc;

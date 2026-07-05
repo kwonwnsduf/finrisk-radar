@@ -2,6 +2,7 @@ package com.finrisk.radar.watchlist;
 
 import com.finrisk.radar.auth.jwt.CustomUserPrincipal;
 import com.finrisk.radar.global.response.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/watchlists")
+@SecurityRequirement(name = "bearerAuth")
 public class WatchlistController {
 	private final WatchlistService watchlistService;
 

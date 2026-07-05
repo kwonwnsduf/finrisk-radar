@@ -4,6 +4,7 @@ import com.finrisk.radar.auth.TokenRevocationStore;
 import com.finrisk.radar.auth.jwt.AccessTokenClaims;
 import com.finrisk.radar.auth.jwt.JwtAuthenticationEntryPoint;
 import com.finrisk.radar.auth.jwt.JwtAuthenticationFilter;
+import com.finrisk.radar.auth.jwt.JwtAccessDeniedHandler;
 import com.finrisk.radar.auth.jwt.JwtProvider;
 import com.finrisk.radar.auth.jwt.SecurityErrorResponseWriter;
 import com.finrisk.radar.auth.oauth.CustomOAuth2UserService;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 		SecurityConfig.class,
 		JwtAuthenticationFilter.class,
 		JwtAuthenticationEntryPoint.class,
+		JwtAccessDeniedHandler.class,
 		SecurityErrorResponseWriter.class,
 		NoOpOAuth2AuthorizedClientRepository.class,
 		GlobalExceptionHandler.class

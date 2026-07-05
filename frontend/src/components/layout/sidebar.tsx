@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, LayoutDashboard, Radar } from "lucide-react";
+import { ChevronLeft, ChevronRight, LayoutDashboard, Radar, Search, Star } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,20 @@ export function Sidebar() {
         >
           <LayoutDashboard className="size-5 shrink-0" aria-hidden="true" />
           {!sidebarCollapsed ? <span>대시보드</span> : null}
+        </Link>
+        <Link
+          href="/assets"
+          className="mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"
+        >
+          <Search className="size-5 shrink-0" aria-hidden="true" />
+          {!sidebarCollapsed ? <span>자산 검색</span> : null}
+        </Link>
+        <Link
+          href="/watchlist"
+          className="mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"
+        >
+          <Star className="size-5 shrink-0" aria-hidden="true" />
+          {!sidebarCollapsed ? <span>관심자산</span> : null}
         </Link>
       </nav>
 

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WatchlistRepository extends JpaRepository<WatchlistItem, Long> {
-	long countByUserId(Long userId);
-	boolean existsByUserIdAndAssetCode(Long userId, String assetCode);
-	List<WatchlistItem> findAllByUserIdOrderByCreatedAtDesc(Long userId);
-	Optional<WatchlistItem> findByIdAndUserId(Long id, Long userId);
+	long countByUser_Id(Long userId);
+	boolean existsByUser_IdAndAsset_Id(Long userId, Long assetId);
+	List<WatchlistItem> findAllByUser_IdOrderByCreatedAtDesc(Long userId);
+	Optional<WatchlistItem> findByIdAndUser_Id(Long id, Long userId);
 }

@@ -11,6 +11,7 @@ public enum ErrorCode {
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_004", "Refresh token is invalid or expired."),
 	AUTH_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AUTH_005", "Authentication service is temporarily unavailable."),
 	INVALID_OAUTH_CODE(HttpStatus.UNAUTHORIZED, "AUTH_006", "OAuth authorization code is invalid or expired."),
+	FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH_007", "You do not have permission to perform this action."),
 	BACKTEST_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "USAGE_001", "Monthly backtest limit exceeded."),
 	RISK_REPORT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "USAGE_002", "Monthly risk report limit exceeded."),
 	AI_AGENT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "USAGE_003", "Monthly AI agent limit exceeded."),
@@ -18,7 +19,9 @@ public enum ErrorCode {
 	USER_PLAN_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "USAGE_005", "User plan is unavailable."),
 	USAGE_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "USAGE_006", "Usage service is temporarily unavailable."),
 	WATCHLIST_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "WATCHLIST_001", "Asset is already in the watchlist."),
-	WATCHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WATCHLIST_002", "Watchlist item was not found.");
+	WATCHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WATCHLIST_002", "Watchlist item was not found."),
+	ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "ASSET_001", "Asset was not found."),
+	ASSET_ALREADY_EXISTS(HttpStatus.CONFLICT, "ASSET_002", "Asset with the same ticker and market already exists.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
