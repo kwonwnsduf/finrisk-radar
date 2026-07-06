@@ -35,8 +35,11 @@ public class AssetSeedData implements CommandLineRunner {
 		return List.of(
 				new Seed("삼성전자", "005930", "KOSPI", "Semiconductor", "KR", "KRW", AssetType.STOCK),
 				new Seed("NAVER", "035420", "KOSPI", "Internet", "KR", "KRW", AssetType.STOCK),
+				new Seed("카카오", "035720", "KOSPI", "Internet", "KR", "KRW", AssetType.STOCK),
 				new Seed("제이알글로벌리츠", "348950", "KOSPI", "REIT", "KR", "KRW", AssetType.REIT),
 				new Seed("맥쿼리인프라", "088980", "KOSPI", "Infrastructure", "KR", "KRW", AssetType.REIT),
+				new Seed("Apple", "AAPL", "NASDAQ", "Technology", "US", "USD", AssetType.STOCK),
+				new Seed("NVIDIA", "NVDA", "NASDAQ", "Semiconductor", "US", "USD", AssetType.STOCK),
 				new Seed("JTBC", "JTBC", "PRIVATE", "Media", "KR", "KRW", AssetType.BOND_ISSUER),
 				new Seed("콘텐트리중앙", "036420", "KOSPI", "Media", "KR", "KRW", AssetType.BOND_ISSUER));
 	}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AssetTypeBadge } from "@/components/assets/asset-type-badge";
+import { AssetPriceChart } from "@/components/assets/asset-price-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiErrorMessage } from "@/lib/api/error-message";
@@ -35,7 +36,7 @@ export function AssetDetail({ assetId }: { assetId: number }) {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       <Button asChild variant="ghost" className="mb-4"><Link href="/assets"><ArrowLeft className="size-4" />자산 목록</Link></Button>
       <Card className="border-slate-200">
         <CardHeader>
@@ -54,6 +55,7 @@ export function AssetDetail({ assetId }: { assetId: number }) {
           </Button>
         </CardContent>
       </Card>
+      <AssetPriceChart asset={asset} />
     </div>
   );
 }

@@ -1,6 +1,16 @@
 spring:
   application:
     name: backend
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.finrisk.radar.collector.event
   security:
     oauth2:
       client:
@@ -21,6 +31,16 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:30m}
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:14d}
+
+app:
+  market-data:
+    yahoo:
+      base-url: ${YAHOO_FINANCE_BASE_URL:https://query1.finance.yahoo.com}
+    s3:
+      region: ${AWS_REGION:}
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+      bucket: ${AWS_S3_BUCKET:}
 
 management:
   prometheus:

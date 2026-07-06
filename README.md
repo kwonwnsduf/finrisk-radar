@@ -5,6 +5,7 @@ FinRisk Radar는 금융 리스크 분석 서비스를 위한 모노레포 프로
 ## 기능별 문서
 
 - [Day 4 자산·관심자산 실행 및 검증](docs/day4-assets-watchlist.md)
+- [Day 5 시장 가격 데이터 파이프라인](docs/day5-market-data-pipeline.md)
 
 ## 디렉터리 구조
 

@@ -78,6 +78,7 @@ public class SecurityConfig {
 								"/v3/api-docs/**")
 						.permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/assets", "/api/assets/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/market-prices/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/assets").hasRole("ADMIN")
 						.requestMatchers("/api/users/me").authenticated()
 						.requestMatchers("/api/auth/logout").authenticated()

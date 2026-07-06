@@ -3,6 +3,9 @@ package com.finrisk.radar;
 import com.finrisk.radar.asset.AssetRepository;
 import com.finrisk.radar.user.UserRepository;
 import com.finrisk.radar.watchlist.WatchlistRepository;
+import com.finrisk.radar.marketprice.MarketPriceRepository;
+import com.finrisk.radar.marketprice.MarketPriceWriter;
+import com.finrisk.radar.collector.log.CollectionLogRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
@@ -23,6 +26,7 @@ import static org.hamcrest.Matchers.containsString;
 				+ "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
 				+ "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration",
 		"management.health.diskspace.enabled=false",
+		"spring.kafka.listener.auto-startup=false",
 		"jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 		"jwt.access-token-expiration=30m",
 		"jwt.refresh-token-expiration=14d",
@@ -41,6 +45,15 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private AssetRepository assetRepository;
+
+	@MockitoBean
+	private MarketPriceRepository marketPriceRepository;
+
+	@MockitoBean
+	private MarketPriceWriter marketPriceWriter;
+
+	@MockitoBean
+	private CollectionLogRepository collectionLogRepository;
 
 	@Autowired
 	private MockMvc mockMvc;

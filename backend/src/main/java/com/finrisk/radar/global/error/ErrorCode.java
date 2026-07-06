@@ -21,7 +21,15 @@ public enum ErrorCode {
 	WATCHLIST_ITEM_ALREADY_EXISTS(HttpStatus.CONFLICT, "WATCHLIST_001", "Asset is already in the watchlist."),
 	WATCHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WATCHLIST_002", "Watchlist item was not found."),
 	ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "ASSET_001", "Asset was not found."),
-	ASSET_ALREADY_EXISTS(HttpStatus.CONFLICT, "ASSET_002", "Asset with the same ticker and market already exists.");
+	ASSET_ALREADY_EXISTS(HttpStatus.CONFLICT, "ASSET_002", "Asset with the same ticker and market already exists."),
+	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "MARKET_DATA_001", "Start date must not be after end date."),
+	UNSUPPORTED_MARKET_ASSET(HttpStatus.BAD_REQUEST, "MARKET_DATA_002", "Only stock and REIT assets support market prices."),
+	TICKER_MISMATCH(HttpStatus.BAD_REQUEST, "MARKET_DATA_003", "Ticker does not match the asset market ticker."),
+	MARKET_DATA_UNAVAILABLE(HttpStatus.BAD_GATEWAY, "MARKET_DATA_004", "Market data is unavailable."),
+	RAW_STORAGE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "MARKET_DATA_005", "Raw market data storage is unavailable."),
+	COLLECTION_JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "MARKET_DATA_006", "Collection job was not found."),
+	COLLECTION_JOB_FORBIDDEN(HttpStatus.FORBIDDEN, "MARKET_DATA_007", "You cannot access this collection job."),
+	COLLECTION_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MARKET_DATA_008", "Collection request could not be published.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
