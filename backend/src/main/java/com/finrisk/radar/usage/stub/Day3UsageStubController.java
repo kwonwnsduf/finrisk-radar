@@ -10,10 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/day3/stubs")
 public class Day3UsageStubController {
-	@UsageLimit(UsageType.BACKTEST)
-	@PostMapping("/backtests")
-	public ApiResponse<String> backtest() { return ApiResponse.success("BACKTEST_ACCEPTED"); }
-
 	@UsageLimit(UsageType.RISK_REPORT)
 	@PostMapping("/risk-reports")
 	public ApiResponse<String> riskReport() { return ApiResponse.success("RISK_REPORT_ACCEPTED"); }

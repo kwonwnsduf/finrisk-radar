@@ -6,6 +6,8 @@ import com.finrisk.radar.watchlist.WatchlistRepository;
 import com.finrisk.radar.marketprice.MarketPriceRepository;
 import com.finrisk.radar.marketprice.MarketPriceWriter;
 import com.finrisk.radar.collector.log.CollectionLogRepository;
+import com.finrisk.radar.backtest.BacktestJobRepository;
+import com.finrisk.radar.backtest.BacktestResultRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
@@ -54,6 +56,12 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private CollectionLogRepository collectionLogRepository;
+
+	@MockitoBean
+	private BacktestJobRepository backtestJobRepository;
+
+	@MockitoBean
+	private BacktestResultRepository backtestResultRepository;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -104,6 +112,8 @@ class BackendApplicationTests {
 	void openApiDocumentIsExposed() throws Exception {
 		mockMvc.perform(get("/v3/api-docs"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.info.title").value("FinRisk Radar API"));
+				.andExpect(jsonPath("$.info.title").value("FinRisk Radar API"))
+				.andExpect(jsonPath("$.paths['/api/backtests']").exists())
+				.andExpect(jsonPath("$.paths['/api/backtests/{jobId}']").exists());
 	}
 }

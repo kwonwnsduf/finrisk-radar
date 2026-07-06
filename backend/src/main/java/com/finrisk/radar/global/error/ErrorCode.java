@@ -29,7 +29,12 @@ public enum ErrorCode {
 	RAW_STORAGE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "MARKET_DATA_005", "Raw market data storage is unavailable."),
 	COLLECTION_JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "MARKET_DATA_006", "Collection job was not found."),
 	COLLECTION_JOB_FORBIDDEN(HttpStatus.FORBIDDEN, "MARKET_DATA_007", "You cannot access this collection job."),
-	COLLECTION_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MARKET_DATA_008", "Collection request could not be published.");
+	COLLECTION_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MARKET_DATA_008", "Collection request could not be published."),
+	BACKTEST_JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "BACKTEST_001", "Backtest job was not found."),
+	BACKTEST_JOB_FORBIDDEN(HttpStatus.FORBIDDEN, "BACKTEST_002", "You cannot access this backtest job."),
+	BACKTEST_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "BACKTEST_003", "Backtest request could not be published."),
+	BACKTEST_PRICE_DATA_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "BACKTEST_004", "Market price data is unavailable for this backtest."),
+	BACKTEST_PRICE_DATA_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "BACKTEST_005", "Market price data is invalid for this backtest.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
