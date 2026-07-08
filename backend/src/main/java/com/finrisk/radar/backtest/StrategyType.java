@@ -1,3 +1,15 @@
 package com.finrisk.radar.backtest;
 
-public enum StrategyType { BUY_AND_HOLD }
+public enum StrategyType {
+	BUY_AND_HOLD,
+	MOVING_AVERAGE,
+	RSI,
+	BOLLINGER_BAND,
+	MACD,
+	VOLATILITY_BREAKOUT,
+	DCA,
+	MA_DEVIATION,
+	DONCHIAN_CHANNEL,
+	MOMENTUM,
+	CUSTOM
+}

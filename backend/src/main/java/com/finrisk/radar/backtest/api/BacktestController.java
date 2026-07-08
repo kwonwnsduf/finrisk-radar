@@ -28,7 +28,7 @@ public class BacktestController {
 		this.queries = queries;
 	}
 
-	@Operation(summary = "Request an asynchronous buy-and-hold backtest")
+	@Operation(summary = "Request an asynchronous backtest with a basic or custom strategy")
 	@UsageLimit(UsageType.BACKTEST)
 	@PostMapping
 	public ResponseEntity<ApiResponse<BacktestCreateResponse>> create(

@@ -1,14 +1,31 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, LayoutDashboard, Radar, Search, Star } from "lucide-react";
+import {
+  ChartNoAxesCombined,
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  Radar,
+  Search,
+  Star,
+} from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui-store";
 
+const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/assets", label: "Assets", icon: Search },
+  { href: "/watchlist", label: "Watchlist", icon: Star },
+  { href: "/backtests", label: "Backtests", icon: ChartNoAxesCombined },
+];
+
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUiStore();
+  const pathname = usePathname();
 
   return (
     <aside
@@ -26,28 +43,26 @@ export function Sidebar() {
         ) : null}
       </div>
 
-      <nav className="flex-1 p-3" aria-label="대시보드 메뉴">
-        <Link
-          href="/dashboard"
-          className="flex h-11 items-center gap-3 rounded-xl bg-slate-800 px-3 text-sm font-semibold text-white"
-        >
-          <LayoutDashboard className="size-5 shrink-0" aria-hidden="true" />
-          {!sidebarCollapsed ? <span>대시보드</span> : null}
-        </Link>
-        <Link
-          href="/assets"
-          className="mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"
-        >
-          <Search className="size-5 shrink-0" aria-hidden="true" />
-          {!sidebarCollapsed ? <span>자산 검색</span> : null}
-        </Link>
-        <Link
-          href="/watchlist"
-          className="mt-1 flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"
-        >
-          <Star className="size-5 shrink-0" aria-hidden="true" />
-          {!sidebarCollapsed ? <span>관심자산</span> : null}
-        </Link>
+      <nav className="flex-1 p-3" aria-label="Dashboard menu">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold",
+                active
+                  ? "bg-slate-800 text-white"
+                  : "mt-1 text-slate-300 hover:bg-slate-800 hover:text-white",
+              )}
+            >
+              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              {!sidebarCollapsed ? <span>{item.label}</span> : null}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="border-t border-slate-800 p-3">
@@ -56,14 +71,14 @@ export function Sidebar() {
           variant="ghost"
           className="w-full text-slate-400 hover:bg-slate-800 hover:text-white"
           onClick={toggleSidebar}
-          aria-label={sidebarCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarCollapsed ? (
             <ChevronRight className="size-5" />
           ) : (
             <>
               <ChevronLeft className="size-5" />
-              <span>사이드바 접기</span>
+              <span>Collapse</span>
             </>
           )}
         </Button>

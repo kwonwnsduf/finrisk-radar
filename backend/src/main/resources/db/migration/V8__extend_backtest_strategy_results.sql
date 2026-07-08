@@ -1,0 +1,14 @@
+ALTER TABLE backtest_jobs
+    ADD COLUMN initial_cash NUMERIC(20, 6) NOT NULL DEFAULT 10000000.000000,
+    ADD COLUMN strategy_config JSONB;
+
+ALTER TABLE backtest_results
+    ADD COLUMN cagr NUMERIC(20, 6) NOT NULL DEFAULT 0,
+    ADD COLUMN mdd NUMERIC(20, 6) NOT NULL DEFAULT 0,
+    ADD COLUMN win_rate NUMERIC(20, 6) NOT NULL DEFAULT 0,
+    ADD COLUMN trade_count INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN sharpe_ratio NUMERIC(20, 6) NOT NULL DEFAULT 0,
+    ADD COLUMN benchmark_return_rate NUMERIC(20, 6) NOT NULL DEFAULT 0,
+    ADD COLUMN monthly_returns JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN daily_portfolio_values JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN trades JSONB NOT NULL DEFAULT '[]'::jsonb;

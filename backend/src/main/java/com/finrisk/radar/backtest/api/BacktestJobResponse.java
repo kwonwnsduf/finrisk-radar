@@ -6,6 +6,7 @@ import com.finrisk.radar.backtest.StrategyType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record BacktestJobResponse(
@@ -14,6 +15,7 @@ public record BacktestJobResponse(
 		StrategyType strategyType,
 		LocalDate startDate,
 		LocalDate endDate,
+		BigDecimal initialCash,
 		BacktestStatus status,
 		String message,
 		LocalDateTime startedAt,
@@ -22,7 +24,7 @@ public record BacktestJobResponse(
 ) {
 	public static BacktestJobResponse from(BacktestJob job, BacktestResultResponse result) {
 		return new BacktestJobResponse(job.getJobId(), job.getAssetId(), job.getStrategyType(),
-				job.getStartDate(), job.getEndDate(), job.getStatus(), job.getMessage(),
+				job.getStartDate(), job.getEndDate(), job.getInitialCash(), job.getStatus(), job.getMessage(),
 				job.getStartedAt(), job.getCompletedAt(), result);
 	}
 }

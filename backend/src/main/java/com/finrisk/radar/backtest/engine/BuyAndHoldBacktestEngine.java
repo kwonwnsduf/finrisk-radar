@@ -4,13 +4,11 @@ import com.finrisk.radar.backtest.StrategyType;
 import com.finrisk.radar.global.error.BusinessException;
 import com.finrisk.radar.global.error.ErrorCode;
 import com.finrisk.radar.marketprice.MarketPriceResponse;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-@Component
 public class BuyAndHoldBacktestEngine implements BacktestEngine {
 	private static final int CALCULATION_SCALE = 12;
 	private static final int RESULT_SCALE = 6;

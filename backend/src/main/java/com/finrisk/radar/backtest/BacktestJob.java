@@ -2,7 +2,10 @@ package com.finrisk.radar.backtest;
 
 import com.finrisk.radar.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,6 +25,11 @@ public class BacktestJob extends BaseTimeEntity {
 	private LocalDate startDate;
 	@Column(name = "end_date", nullable = false, updatable = false)
 	private LocalDate endDate;
+	@Column(name = "initial_cash", nullable = false, precision = 20, scale = 6, updatable = false)
+	private BigDecimal initialCash;
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "strategy_config", columnDefinition = "jsonb", updatable = false)
+	private String strategyConfig;
 	@Enumerated(EnumType.STRING) @Column(nullable = false, length = 20)
 	private BacktestStatus status;
 	@Column(length = 1000)
@@ -34,20 +42,29 @@ public class BacktestJob extends BaseTimeEntity {
 	protected BacktestJob() {}
 
 	private BacktestJob(UUID jobId, Long userId, Long assetId, StrategyType strategyType,
-			LocalDate startDate, LocalDate endDate) {
+			LocalDate startDate, LocalDate endDate, BigDecimal initialCash, String strategyConfig) {
 		this.jobId = jobId;
 		this.requestedByUserId = userId;
 		this.assetId = assetId;
 		this.strategyType = strategyType;
 		this.startDate = startDate;
 		this.endDate = endDate;
+		this.initialCash = initialCash;
+		this.strategyConfig = strategyConfig;
 		this.status = BacktestStatus.REQUESTED;
 		this.message = "Backtest requested.";
 	}
 
 	public static BacktestJob requested(Long userId, Long assetId, StrategyType strategyType,
 			LocalDate startDate, LocalDate endDate) {
-		return new BacktestJob(UUID.randomUUID(), userId, assetId, strategyType, startDate, endDate);
+		return requested(userId, assetId, strategyType, startDate, endDate,
+				new BigDecimal("10000000.000000"), null);
+	}
+
+	public static BacktestJob requested(Long userId, Long assetId, StrategyType strategyType,
+			LocalDate startDate, LocalDate endDate, BigDecimal initialCash, String strategyConfig) {
+		return new BacktestJob(UUID.randomUUID(), userId, assetId, strategyType, startDate, endDate,
+				initialCash, strategyConfig);
 	}
 
 	public boolean start() {
@@ -78,6 +95,8 @@ public class BacktestJob extends BaseTimeEntity {
 	public StrategyType getStrategyType() { return strategyType; }
 	public LocalDate getStartDate() { return startDate; }
 	public LocalDate getEndDate() { return endDate; }
+	public BigDecimal getInitialCash() { return initialCash; }
+	public String getStrategyConfig() { return strategyConfig; }
 	public BacktestStatus getStatus() { return status; }
 	public String getMessage() { return message; }
 	public LocalDateTime getStartedAt() { return startedAt; }
