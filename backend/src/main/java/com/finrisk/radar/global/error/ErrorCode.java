@@ -34,7 +34,12 @@ public enum ErrorCode {
 	BACKTEST_JOB_FORBIDDEN(HttpStatus.FORBIDDEN, "BACKTEST_002", "You cannot access this backtest job."),
 	BACKTEST_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "BACKTEST_003", "Backtest request could not be published."),
 	BACKTEST_PRICE_DATA_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "BACKTEST_004", "Market price data is unavailable for this backtest."),
-	BACKTEST_PRICE_DATA_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "BACKTEST_005", "Market price data is invalid for this backtest.");
+	BACKTEST_PRICE_DATA_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "BACKTEST_005", "Market price data is invalid for this backtest."),
+	FINANCIAL_DATA_UNAVAILABLE(HttpStatus.BAD_GATEWAY, "FINANCIAL_001", "Financial data is unavailable."),
+	DART_API_KEY_MISSING(HttpStatus.SERVICE_UNAVAILABLE, "FINANCIAL_002", "DART API key is not configured."),
+	FINANCIAL_CORP_CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "FINANCIAL_003", "DART corp code was not found for the stock code."),
+	FINANCIAL_COLLECTION_REQUEST_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "FINANCIAL_004", "Financial data collection request could not be published."),
+	FINANCIAL_COLLECTION_JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "FINANCIAL_005", "Financial collection job was not found.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

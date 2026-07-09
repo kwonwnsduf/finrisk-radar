@@ -10,7 +10,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event
+        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event
   security:
     oauth2:
       client:
@@ -41,6 +41,9 @@ app:
       access-key: ${AWS_ACCESS_KEY:}
       secret-key: ${AWS_SECRET_KEY:}
       bucket: ${AWS_S3_BUCKET:}
+  dart:
+    base-url: ${DART_BASE_URL:https://opendart.fss.or.kr}
+    api-key: ${DART_API_KEY:}
 
 management:
   prometheus:

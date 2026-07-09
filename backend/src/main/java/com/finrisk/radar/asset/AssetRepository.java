@@ -12,6 +12,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
 	Optional<Asset> findByTickerAndMarket(String ticker, String market);
 
+	Optional<Asset> findFirstByTickerOrderByIdAsc(String ticker);
+
 	List<Asset> findAllByOrderByNameAsc();
 
 	@Query("""

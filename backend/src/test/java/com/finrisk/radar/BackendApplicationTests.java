@@ -8,6 +8,10 @@ import com.finrisk.radar.marketprice.MarketPriceWriter;
 import com.finrisk.radar.collector.log.CollectionLogRepository;
 import com.finrisk.radar.backtest.BacktestJobRepository;
 import com.finrisk.radar.backtest.BacktestResultRepository;
+import com.finrisk.radar.financial.DartCorpCodeRepository;
+import com.finrisk.radar.financial.DebtMaturityRepository;
+import com.finrisk.radar.financial.FinancialCollectionLogRepository;
+import com.finrisk.radar.financial.FinancialMetricRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
@@ -62,6 +66,18 @@ class BackendApplicationTests {
 
 	@MockitoBean
 	private BacktestResultRepository backtestResultRepository;
+
+	@MockitoBean
+	private DartCorpCodeRepository dartCorpCodeRepository;
+
+	@MockitoBean
+	private FinancialMetricRepository financialMetricRepository;
+
+	@MockitoBean
+	private DebtMaturityRepository debtMaturityRepository;
+
+	@MockitoBean
+	private FinancialCollectionLogRepository financialCollectionLogRepository;
 
 	@Autowired
 	private MockMvc mockMvc;
