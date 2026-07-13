@@ -1,0 +1,27 @@
+CREATE TABLE reit_metrics (
+ id BIGSERIAL PRIMARY KEY,
+ asset_id BIGINT NOT NULL REFERENCES assets(id),
+ period DATE NOT NULL,
+ ltv NUMERIC(10,4),
+ book_asset_value NUMERIC(24,2),
+ appraised_asset_value NUMERIC(24,2),
+ total_borrowings NUMERIC(24,2),
+ interest_expense NUMERIC(24,2),
+ rental_income NUMERIC(24,2),
+ vacancy_rate NUMERIC(10,4),
+ dividend_payout_ratio NUMERIC(10,4),
+ refinancing_rate NUMERIC(10,4),
+ fx_hedge_settlement NUMERIC(24,2),
+ available_liquidity NUMERIC(24,2),
+ cash_trap_threshold NUMERIC(10,4),
+ default_ltv_threshold NUMERIC(10,4),
+ foreign_cash_dependency_ratio NUMERIC(10,4),
+ cash_trap_flag BOOLEAN NOT NULL DEFAULT FALSE,
+ source_type VARCHAR(30) NOT NULL,
+ source_document_id VARCHAR(200),
+ fetched_at TIMESTAMP,
+ created_at TIMESTAMP NOT NULL,
+ updated_at TIMESTAMP NOT NULL,
+ CONSTRAINT uq_reit_metrics_asset_period UNIQUE(asset_id, period)
+);
+CREATE INDEX idx_reit_metrics_asset_period ON reit_metrics(asset_id, period DESC);

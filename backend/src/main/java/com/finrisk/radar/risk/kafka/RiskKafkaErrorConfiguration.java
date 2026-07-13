@@ -60,7 +60,7 @@ public class RiskKafkaErrorConfiguration {
           new RiskScoreFailedEvent(event.jobId(), event.assetId(), code, message, Instant.now()));
       log.error(
           "event=risk_calculation_job_failed jobId={} assetId={} topic={} partition={} offset={}"
-              + " failureCode={} ruleVersion=corporate-risk-v1",
+              + " failureCode={}",
           event.jobId(),
           event.assetId(),
           record.topic(),

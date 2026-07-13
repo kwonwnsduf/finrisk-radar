@@ -80,6 +80,23 @@ public class DebtMaturity extends BaseTimeEntity {
     return maturity;
   }
 
+  public static DebtMaturity createSnapshot(
+      Asset asset,
+      LocalDate maturityDate,
+      BigDecimal amount,
+      DebtType debtType,
+      BigDecimal interestRate,
+      String currency,
+      boolean shortTerm,
+      LocalDate snapshotDate,
+      String externalDebtKey) {
+    DebtMaturity maturity =
+        new DebtMaturity(asset, maturityDate, amount, debtType, interestRate, currency, shortTerm);
+    maturity.snapshotDate = snapshotDate;
+    maturity.externalDebtKey = externalDebtKey;
+    return maturity;
+  }
+
   public Long getId() {
     return id;
   }

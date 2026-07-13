@@ -21,6 +21,7 @@ import com.finrisk.radar.risk.CreditEventRepository;
 import com.finrisk.radar.risk.RiskCalculationJobRepository;
 import com.finrisk.radar.risk.RiskScoreRepository;
 import com.finrisk.radar.risk.RiskSignalRepository;
+import com.finrisk.radar.risk.ReitMetricRepository;
 import com.finrisk.radar.user.UserRepository;
 import com.finrisk.radar.watchlist.WatchlistRepository;
 import org.junit.jupiter.api.Test;
@@ -78,6 +79,7 @@ class BackendApplicationTests {
   @MockitoBean private RiskSignalRepository riskSignalRepository;
   @MockitoBean private CreditEventRepository creditEventRepository;
   @MockitoBean private AssetRelationshipRepository assetRelationshipRepository;
+  @MockitoBean private ReitMetricRepository reitMetricRepository;
 
   @Autowired private MockMvc mockMvc;
 

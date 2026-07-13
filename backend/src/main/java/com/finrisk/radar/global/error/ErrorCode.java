@@ -99,7 +99,11 @@ public enum ErrorCode {
   RISK_KAFKA_PUBLISH_FAILED(
       HttpStatus.SERVICE_UNAVAILABLE,
       "RISK_010",
-      "Risk calculation request could not be published.");
+      "Risk calculation request could not be published."),
+  RISK_REIT_METRIC_NOT_FOUND(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "RISK_011",
+      "REIT metrics required for risk calculation were not found.");
 
   private final HttpStatus httpStatus;
   private final String code;

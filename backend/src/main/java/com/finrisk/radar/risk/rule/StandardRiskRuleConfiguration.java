@@ -573,6 +573,7 @@ public class StandardRiskRuleConfiguration {
       case SPECULATIVE_GRADE_ENTRY -> 7;
       case CREDIT_RATING_CCC_OR_BELOW -> 10;
       case FUNDING_FAILURE -> 8;
+      case RIGHTS_OFFERING_FAILURE, BOND_ISSUANCE_FAILURE -> 8;
       case REFINANCING_FAILURE -> 12;
       case PAYMENT_DELAY -> 15;
       case EVENT_OF_DEFAULT, ACCELERATION_EVENT -> 18;

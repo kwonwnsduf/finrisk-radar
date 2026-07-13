@@ -19,7 +19,8 @@ public class RiskScoringEngine {
       UUID jobId, RiskEvaluationContext context, String version) {
     List<RiskRuleResult> results = new ArrayList<>();
     RiskJobExecutionSummary summary = new RiskJobExecutionSummary();
-    for (RiskRule rule : registry.rules()) {
+    List<RiskRule> applicableRules = registry.rulesFor(context.asset().getAssetType());
+    for (RiskRule rule : applicableRules) {
       long start = System.nanoTime();
       try {
         RiskRuleResult result = rule.evaluate(context);
@@ -94,12 +95,12 @@ public class RiskScoringEngine {
         if (incomplete) missing.add(c.name());
       }
     }
-    int required = (int) registry.rules().stream().filter(RiskRule::required).count();
+    int required = (int) applicableRules.stream().filter(RiskRule::required).count();
     long calculated =
         results.stream()
             .filter(
                 r ->
-                    registry.rules().stream()
+                    applicableRules.stream()
                             .anyMatch(rule -> rule.supports() == r.ruleType() && rule.required())
                         && r.status() == CategoryCalculationStatus.CALCULATED)
             .count();
@@ -124,6 +125,11 @@ public class RiskScoringEngine {
   }
 
   private RiskDataQuality quality(RiskEvaluationContext c, int rate) {
+    if (c.asset().getAssetType() == com.finrisk.radar.asset.AssetType.REIT) {
+      LocalDate period = c.latestReitMetric().getPeriod();
+      if (period.isBefore(c.asOfDate().minusDays(370))) return RiskDataQuality.STALE;
+      return rate == 100 ? RiskDataQuality.COMPLETE : RiskDataQuality.PARTIAL;
+    }
     FinancialMetricLatest latest =
         new FinancialMetricLatest(c.latest().getYear(), c.latest().getQuarter());
     LocalDate approx =

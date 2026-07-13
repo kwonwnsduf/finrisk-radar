@@ -13,6 +13,7 @@ import { apiErrorMessage } from "@/lib/api/error-message";
 import { getAsset } from "@/lib/api/assets";
 import { addWatchlist } from "@/lib/api/watchlists";
 import { RiskOverview } from "@/components/risks/risk-overview";
+import { ReitRiskOverview } from "@/components/risks/reit-risk-overview";
 
 export function AssetDetail({ assetId }: { assetId: number }) {
   const queryClient = useQueryClient();
@@ -106,6 +107,7 @@ export function AssetDetail({ assetId }: { assetId: number }) {
       {asset.assetType === "BOND_ISSUER" ? (
         <RiskOverview assetId={asset.id} />
       ) : null}
+      {asset.assetType === "REIT" ? <ReitRiskOverview assetId={asset.id} /> : null}
     </div>
   );
 }

@@ -35,6 +35,8 @@ jwt:
 app:
   seed-risk-scenarios:
     enabled: ${SEED_RISK_SCENARIOS_ENABLED:false}
+  seed-reit-risk-scenarios:
+    enabled: ${SEED_REIT_RISK_SCENARIOS_ENABLED:false}
   market-data:
     yahoo:
       base-url: ${YAHOO_FINANCE_BASE_URL:https://query1.finance.yahoo.com}

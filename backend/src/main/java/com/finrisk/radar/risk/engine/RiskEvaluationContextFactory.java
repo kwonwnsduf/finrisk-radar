@@ -17,6 +17,7 @@ public class RiskEvaluationContextFactory {
   private final MarketPriceRepository prices;
   private final CreditEventRepository events;
   private final AssetRelationshipRepository relationships;
+  private final ReitMetricRepository reitMetrics;
 
   public RiskEvaluationContextFactory(
       AssetRepository a,
@@ -24,13 +25,15 @@ public class RiskEvaluationContextFactory {
       DebtMaturityRepository d,
       MarketPriceRepository p,
       CreditEventRepository e,
-      AssetRelationshipRepository r) {
+      AssetRelationshipRepository r,
+      ReitMetricRepository rm) {
     assets = a;
     financials = f;
     debts = d;
     prices = p;
     events = e;
     relationships = r;
+    reitMetrics = rm;
   }
 
   public RiskEvaluationContext create(Long assetId, LocalDate asOf) {
@@ -39,7 +42,14 @@ public class RiskEvaluationContextFactory {
             .findById(assetId)
             .orElseThrow(() -> new BusinessException(ErrorCode.ASSET_NOT_FOUND));
     List<FinancialMetric> fs = financials.findByAssetIdOrderByYearDescQuarterDesc(assetId);
-    if (fs.isEmpty()) throw new BusinessException(ErrorCode.RISK_FINANCIAL_DATA_NOT_FOUND);
+    if (asset.getAssetType() == AssetType.BOND_ISSUER && fs.isEmpty())
+      throw new BusinessException(ErrorCode.RISK_FINANCIAL_DATA_NOT_FOUND);
+    List<ReitMetric> rms =
+        asset.getAssetType() == AssetType.REIT
+            ? reitMetrics.findByAssetIdAndPeriodLessThanEqualOrderByPeriodDesc(assetId, asOf)
+            : List.of();
+    if (asset.getAssetType() == AssetType.REIT && rms.isEmpty())
+      throw new BusinessException(ErrorCode.RISK_REIT_METRIC_NOT_FOUND);
     List<DebtMaturity> all = debts.findByAssetIdOrderByMaturityDateAsc(assetId);
     List<LocalDate> snapshots =
         all.stream()
@@ -57,6 +67,11 @@ public class RiskEvaluationContextFactory {
         snapshots.size() < 2
             ? List.of()
             : all.stream().filter(d -> snapshots.get(1).equals(d.getSnapshotDate())).toList();
+    List<List<DebtMaturity>> debtSnapshots =
+        snapshots.stream()
+            .limit(4)
+            .map(snapshot -> all.stream().filter(d -> snapshot.equals(d.getSnapshotDate())).toList())
+            .toList();
     List<MarketPrice> ps =
         asset.getMarketPriceAssetId() == null
             ? List.of()
@@ -85,6 +100,8 @@ public class RiskEvaluationContextFactory {
         List.copyOf(fs),
         List.copyOf(ds),
         List.copyOf(previous),
+        List.copyOf(debtSnapshots),
+        List.copyOf(rms),
         List.copyOf(ps),
         events.findByAssetIdAndEventDateLessThanEqualOrderByEventDateDesc(assetId, asOf),
         List.copyOf(related),

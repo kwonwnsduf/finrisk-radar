@@ -65,3 +65,9 @@ export async function getRiskScore(id: number) {
   const r = await apiClient.get<ApiResponse<RiskScore>>(`/api/risks/${id}`);
   return r.data.data;
 }
+export async function getRiskHistory(assetId: number) {
+  const r = await apiClient.get<ApiResponse<RiskScore[]>>(
+    `/api/risks/assets/${assetId}/history`,
+  );
+  return r.data.data;
+}

@@ -1,5 +1,6 @@
 package com.finrisk.radar.risk.engine;
 
+import com.finrisk.radar.asset.AssetType;
 import java.util.*;
 import org.springframework.stereotype.Component;
 
@@ -23,5 +24,9 @@ public class RiskRuleRegistry {
 
   public List<RiskRule> rules() {
     return rules;
+  }
+
+  public List<RiskRule> rulesFor(AssetType assetType) {
+    return rules.stream().filter(rule -> rule.supportsAssetType(assetType)).toList();
   }
 }

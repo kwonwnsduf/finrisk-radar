@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RiskCalculationRequestService {
-  public static final String VERSION = "corporate-risk-v1";
+  public static final String CORPORATE_VERSION = "corporate-risk-v1";
+  public static final String REIT_VERSION = "reit-risk-v1";
   private final UserRepository users;
   private final AssetRepository assets;
   private final RiskCalculationJobService jobs;
@@ -32,11 +33,13 @@ public class RiskCalculationRequestService {
         assets
             .findById(assetId)
             .orElseThrow(() -> new BusinessException(ErrorCode.ASSET_NOT_FOUND));
-    if (asset.getAssetType() != AssetType.BOND_ISSUER)
+    if (asset.getAssetType() != AssetType.BOND_ISSUER && asset.getAssetType() != AssetType.REIT)
       throw new BusinessException(ErrorCode.RISK_ASSET_NOT_SUPPORTED);
     RiskCalculationJob job;
     try {
-      job = jobs.create(userId, assetId, VERSION);
+      String version =
+          asset.getAssetType() == AssetType.REIT ? REIT_VERSION : CORPORATE_VERSION;
+      job = jobs.create(userId, assetId, version);
     } catch (DataIntegrityViolationException e) {
       throw new BusinessException(ErrorCode.RISK_CALCULATION_ALREADY_RUNNING);
     }
