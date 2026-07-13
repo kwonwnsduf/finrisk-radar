@@ -1,8 +1,8 @@
 package com.finrisk.radar.global.config;
 
+import com.finrisk.radar.auth.jwt.JwtAccessDeniedHandler;
 import com.finrisk.radar.auth.jwt.JwtAuthenticationEntryPoint;
 import com.finrisk.radar.auth.jwt.JwtAuthenticationFilter;
-import com.finrisk.radar.auth.jwt.JwtAccessDeniedHandler;
 import com.finrisk.radar.auth.oauth.CustomOAuth2UserService;
 import com.finrisk.radar.auth.oauth.NoOpOAuth2AuthorizedClientRepository;
 import com.finrisk.radar.auth.oauth.OAuthFailureHandler;
@@ -20,71 +20,81 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 @Configuration
 public class SecurityConfig {
 
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-	private final CustomOAuth2UserService customOAuth2UserService;
-	private final OAuthSuccessHandler oauthSuccessHandler;
-	private final OAuthFailureHandler oauthFailureHandler;
-	private final NoOpOAuth2AuthorizedClientRepository authorizedClientRepository;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+  private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+  private final CustomOAuth2UserService customOAuth2UserService;
+  private final OAuthSuccessHandler oauthSuccessHandler;
+  private final OAuthFailureHandler oauthFailureHandler;
+  private final NoOpOAuth2AuthorizedClientRepository authorizedClientRepository;
 
-	public SecurityConfig(
-			JwtAuthenticationFilter jwtAuthenticationFilter,
-			JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-			JwtAccessDeniedHandler jwtAccessDeniedHandler,
-			CustomOAuth2UserService customOAuth2UserService,
-			OAuthSuccessHandler oauthSuccessHandler,
-			OAuthFailureHandler oauthFailureHandler,
-			NoOpOAuth2AuthorizedClientRepository authorizedClientRepository
-	) {
-		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-		this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-		this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
-		this.customOAuth2UserService = customOAuth2UserService;
-		this.oauthSuccessHandler = oauthSuccessHandler;
-		this.oauthFailureHandler = oauthFailureHandler;
-		this.authorizedClientRepository = authorizedClientRepository;
-	}
+  public SecurityConfig(
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+      JwtAccessDeniedHandler jwtAccessDeniedHandler,
+      CustomOAuth2UserService customOAuth2UserService,
+      OAuthSuccessHandler oauthSuccessHandler,
+      OAuthFailureHandler oauthFailureHandler,
+      NoOpOAuth2AuthorizedClientRepository authorizedClientRepository) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+    this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
+    this.customOAuth2UserService = customOAuth2UserService;
+    this.oauthSuccessHandler = oauthSuccessHandler;
+    this.oauthFailureHandler = oauthFailureHandler;
+    this.authorizedClientRepository = authorizedClientRepository;
+  }
 
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http
-				.csrf(AbstractHttpConfigurer::disable)
-				.exceptionHandling(exception -> exception
-						.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-						.accessDeniedHandler(jwtAccessDeniedHandler))
-				.requestCache(cache -> cache.requestCache(new NullRequestCache()))
-				.sessionManagement(session -> session
-						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-				.oauth2Login(oauth -> oauth
-						.authorizedClientRepository(authorizedClientRepository)
-						.userInfoEndpoint(userInfo -> userInfo
-								.userService(customOAuth2UserService))
-						.successHandler(oauthSuccessHandler)
-						.failureHandler(oauthFailureHandler))
-				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(
-								"/api/auth/signup",
-								"/api/auth/login",
-								"/api/auth/refresh",
-								"/api/auth/oauth/exchange",
-								"/oauth2/authorization/google",
-								"/login/oauth2/code/google",
-								"/api/health",
-								"/actuator/health",
-								"/actuator/prometheus",
-								"/swagger-ui.html",
-								"/swagger-ui/**",
-								"/v3/api-docs/**")
-						.permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/assets", "/api/assets/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/market-prices/**").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/assets").hasRole("ADMIN")
-						.requestMatchers("/api/users/me").authenticated()
-						.requestMatchers("/api/auth/logout").authenticated()
-						.anyRequest().authenticated())
-				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-				.build();
-	}
-
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http.csrf(AbstractHttpConfigurer::disable)
+        .exceptionHandling(
+            exception ->
+                exception
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                    .accessDeniedHandler(jwtAccessDeniedHandler))
+        .requestCache(cache -> cache.requestCache(new NullRequestCache()))
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        .oauth2Login(
+            oauth ->
+                oauth
+                    .authorizedClientRepository(authorizedClientRepository)
+                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                    .successHandler(oauthSuccessHandler)
+                    .failureHandler(oauthFailureHandler))
+        .authorizeHttpRequests(
+            authorize ->
+                authorize
+                    .requestMatchers(
+                        "/api/auth/signup",
+                        "/api/auth/login",
+                        "/api/auth/refresh",
+                        "/api/auth/oauth/exchange",
+                        "/oauth2/authorization/google",
+                        "/login/oauth2/code/google",
+                        "/api/health",
+                        "/actuator/health",
+                        "/actuator/prometheus",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/assets", "/api/assets/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/market-prices/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/assets")
+                    .hasRole("ADMIN")
+                    .requestMatchers("/api/admin/risks/**")
+                    .hasRole("ADMIN")
+                    .requestMatchers("/api/users/me")
+                    .authenticated()
+                    .requestMatchers("/api/auth/logout")
+                    .authenticated()
+                    .anyRequest()
+                    .authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .build();
+  }
 }

@@ -10,7 +10,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event
+        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event
   security:
     oauth2:
       client:
@@ -33,6 +33,8 @@ jwt:
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:14d}
 
 app:
+  seed-risk-scenarios:
+    enabled: ${SEED_RISK_SCENARIOS_ENABLED:false}
   market-data:
     yahoo:
       base-url: ${YAHOO_FINANCE_BASE_URL:https://query1.finance.yahoo.com}
