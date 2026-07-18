@@ -10,7 +10,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event
+        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event,com.finrisk.radar.document.event
   security:
     oauth2:
       client:
@@ -48,6 +48,15 @@ app:
   dart:
     base-url: ${DART_BASE_URL:https://opendart.fss.or.kr}
     api-key: ${DART_API_KEY:}
+  documents:
+    naver:
+      base-url: ${NAVER_NEWS_BASE_URL:https://naverapihub.apigw.ntruss.com}
+      client-id: ${NAVER_CLIENT_ID:}
+      client-secret: ${NAVER_CLIENT_SECRET:}
+    scheduler:
+      enabled: ${DOCUMENT_COLLECTION_SCHEDULER_ENABLED:false}
+      cron: ${DOCUMENT_COLLECTION_SCHEDULER_CRON:0 0 * * * *}
+    recalculation-retry-delay: ${DOCUMENT_RECALCULATION_RETRY_DELAY:60000}
 
 management:
   prometheus:

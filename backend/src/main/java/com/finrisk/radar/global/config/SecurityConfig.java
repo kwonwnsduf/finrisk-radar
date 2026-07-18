@@ -88,6 +88,8 @@ public class SecurityConfig {
                     .hasRole("ADMIN")
                     .requestMatchers("/api/admin/risks/**")
                     .hasRole("ADMIN")
+                    .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
                     .requestMatchers("/api/users/me")
                     .authenticated()
                     .requestMatchers("/api/auth/logout")

@@ -57,6 +57,31 @@ public class DartClient {
 		return ofs;
 	}
 
+	public String searchDisclosures(String corpCode, java.time.LocalDate from, java.time.LocalDate to, int page) {
+		requireKey();
+		try {
+			return restClient.get().uri(uri -> uri.path("/api/list.json")
+					.queryParam("crtfc_key", properties.apiKey()).queryParam("corp_code", corpCode)
+					.queryParam("bgn_de", from.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE))
+					.queryParam("end_de", to.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE))
+					.queryParam("page_no", page).queryParam("page_count", 100).build())
+					.retrieve().body(String.class);
+		} catch (RestClientException exception) {
+			throw new DartClientException("DART disclosure search failed.", exception);
+		}
+	}
+
+	public byte[] downloadDisclosureDocument(String receiptNumber) {
+		requireKey();
+		try {
+			return restClient.get().uri(uri -> uri.path("/api/document.xml")
+					.queryParam("crtfc_key", properties.apiKey()).queryParam("rcept_no", receiptNumber).build())
+					.retrieve().body(byte[].class);
+		} catch (RestClientException exception) {
+			throw new DartClientException("DART disclosure document request failed.", exception);
+		}
+	}
+
 	private RawDartFinancialStatement fetch(String corpCode, Integer year, Integer quarter,
 			DartStatementDivision division, boolean fallbackUsed) {
 		requireKey();

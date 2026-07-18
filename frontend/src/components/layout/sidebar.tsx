@@ -6,6 +6,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   Radar,
+  ShieldCheck,
   Search,
   Star,
 } from "lucide-react";
@@ -15,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui-store";
+import { useAuthStore } from "@/store/auth-store";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,7 +27,11 @@ const navItems = [
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUiStore();
+  const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
+  const visibleItems = user?.role === "ROLE_ADMIN"
+    ? [...navItems, { href: "/admin/credit-event-candidates", label: "Event Review", icon: ShieldCheck }]
+    : navItems;
 
   return (
     <aside
@@ -44,7 +50,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3" aria-label="Dashboard menu">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (

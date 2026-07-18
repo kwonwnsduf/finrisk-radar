@@ -29,6 +29,7 @@ public class ReitRiskRuleConfiguration {
   @Bean RiskRule reitBondIssuanceFailureRiskRule() { return new ReitBondIssuanceFailureRiskRule(); }
   @Bean RiskRule reitCreditDowngradeRiskRule() { return new ReitCreditDowngradeRiskRule(); }
   @Bean RiskRule reitRehabilitationEventRiskRule() { return new ReitRehabilitationEventRiskRule(); }
+  @Bean RiskRule reitDocumentCreditEventRiskRule() { return new ReitDocumentCreditEventRiskRule(); }
 }
 
 abstract class ReitRiskRule implements RiskRule {
@@ -278,4 +279,20 @@ final class ReitCreditDowngradeRiskRule extends ReitEventRiskRule {
 final class ReitRehabilitationEventRiskRule extends ReitEventRiskRule {
   ReitRehabilitationEventRiskRule() { super(11800, RiskRuleType.REHABILITATION_EVENT, 11, CreditEventType.REHABILITATION_FILED); }
   int maxForEvent() { return 11; }
+}
+
+final class ReitDocumentCreditEventRiskRule extends ReitEventRiskRule {
+  ReitDocumentCreditEventRiskRule() { super(11900, RiskRuleType.DOCUMENT_CREDIT_EVENT, 8,
+      CreditEventType.LIQUIDITY_CRISIS, CreditEventType.FX_HEDGE_STRESS,
+      CreditEventType.CASH_TRAP_TRIGGERED, CreditEventType.DIVIDEND_REDUCTION,
+      CreditEventType.LTV_COVENANT_BREACH); }
+  int maxForEvent() { return 8; }
+  int score(CreditEvent event) {
+    return switch (event.getEventType()) {
+      case CASH_TRAP_TRIGGERED, LTV_COVENANT_BREACH, LIQUIDITY_CRISIS -> 8;
+      case FX_HEDGE_STRESS -> 5;
+      case DIVIDEND_REDUCTION -> 3;
+      default -> 0;
+    };
+  }
 }

@@ -12,6 +12,8 @@ public record RiskSignalResponse(
     int score,
     String message,
     String evidence,
+    String sourceType,
+    Long sourceId,
     LocalDateTime detectedAt) {
   public static RiskSignalResponse from(RiskSignal s) {
     return new RiskSignalResponse(
@@ -23,6 +25,8 @@ public record RiskSignalResponse(
         s.getScore(),
         s.getMessage(),
         s.getEvidence(),
+        s.getSourceType(),
+        s.getSourceId(),
         s.getDetectedAt());
   }
 }

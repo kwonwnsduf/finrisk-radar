@@ -127,6 +127,10 @@ public class RiskSignal extends BaseTimeEntity {
     return evidence;
   }
 
+  public String getSourceType() { return sourceType; }
+
+  public Long getSourceId() { return sourceId; }
+
   public LocalDateTime getDetectedAt() {
     return detectedAt;
   }

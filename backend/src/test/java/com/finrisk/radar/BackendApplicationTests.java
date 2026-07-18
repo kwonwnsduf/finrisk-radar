@@ -16,6 +16,7 @@ import com.finrisk.radar.financial.FinancialCollectionLogRepository;
 import com.finrisk.radar.financial.FinancialMetricRepository;
 import com.finrisk.radar.marketprice.MarketPriceRepository;
 import com.finrisk.radar.marketprice.MarketPriceWriter;
+import com.finrisk.radar.document.*;
 import com.finrisk.radar.risk.AssetRelationshipRepository;
 import com.finrisk.radar.risk.CreditEventRepository;
 import com.finrisk.radar.risk.RiskCalculationJobRepository;
@@ -80,6 +81,12 @@ class BackendApplicationTests {
   @MockitoBean private CreditEventRepository creditEventRepository;
   @MockitoBean private AssetRelationshipRepository assetRelationshipRepository;
   @MockitoBean private ReitMetricRepository reitMetricRepository;
+  @MockitoBean private DocumentRepository documentRepository;
+  @MockitoBean private DocumentCollectionJobRepository documentCollectionJobRepository;
+  @MockitoBean private AssetAliasRepository assetAliasRepository;
+  @MockitoBean private DocumentAssetMappingRepository documentAssetMappingRepository;
+  @MockitoBean private DocumentRiskMatchRepository documentRiskMatchRepository;
+  @MockitoBean private CreditEventCandidateRepository creditEventCandidateRepository;
 
   @Autowired private MockMvc mockMvc;
 
