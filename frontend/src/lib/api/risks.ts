@@ -1,7 +1,12 @@
 import { apiClient } from "@/lib/api/client";
 import type { ApiResponse } from "@/lib/auth/types";
 
-export type RiskJobStatus = "REQUESTED" | "RUNNING" | "COMPLETED" | "FAILED";
+export type RiskJobStatus =
+  | "COLLECTING"
+  | "REQUESTED"
+  | "RUNNING"
+  | "COMPLETED"
+  | "FAILED";
 export interface RiskJob {
   jobId: string;
   assetId: number;

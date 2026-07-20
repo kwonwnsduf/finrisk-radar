@@ -4,6 +4,7 @@ import com.finrisk.radar.document.*;
 import com.finrisk.radar.risk.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public record CandidateResponse(
@@ -17,6 +18,9 @@ public record CandidateResponse(
     Long approvedCreditEventId,
     RecalculationStatus recalculationStatus,
     UUID recalculationJobId,
+    int recalculationAttemptCount,
+    LocalDateTime recalculationLastAttemptedAt,
+    String recalculationLastError,
     List<DocumentRiskMatchResponse> matches) {
   public static CandidateResponse from(CreditEventCandidate c, List<DocumentRiskMatch> matches) {
     return new CandidateResponse(
@@ -30,6 +34,9 @@ public record CandidateResponse(
         c.getApprovedCreditEventId(),
         c.getRecalculationStatus(),
         c.getRecalculationJobId(),
+        c.getRecalculationAttemptCount(),
+        c.getRecalculationLastAttemptedAt(),
+        c.getRecalculationLastError(),
         matches.stream().map(DocumentRiskMatchResponse::from).toList());
   }
 }

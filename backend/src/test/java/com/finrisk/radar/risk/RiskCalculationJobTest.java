@@ -16,4 +16,13 @@ class RiskCalculationJobTest {
     assertEquals(RiskCalculationStatus.FAILED, job.getStatus());
     assertEquals("safe", job.getFailureMessage());
   }
+
+  @Test
+  void representsDataCollectionAsAnActivePhase() {
+    RiskCalculationJob job =
+        RiskCalculationJob.collecting(1L, 2L, "reit-risk-v1", LocalDate.of(2026, 7, 20));
+
+    assertEquals(RiskCalculationStatus.COLLECTING, job.getStatus());
+    assertEquals("reit-risk-v1", job.getRuleVersion());
+  }
 }

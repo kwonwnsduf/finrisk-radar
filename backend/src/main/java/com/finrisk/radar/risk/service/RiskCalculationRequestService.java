@@ -18,13 +18,19 @@ public class RiskCalculationRequestService {
   private final AssetRepository assets;
   private final RiskCalculationJobService jobs;
   private final RiskEventPublisher publisher;
+  private final RiskDataPreparationService preparation;
 
   public RiskCalculationRequestService(
-      UserRepository u, AssetRepository a, RiskCalculationJobService j, RiskEventPublisher p) {
+      UserRepository u,
+      AssetRepository a,
+      RiskCalculationJobService j,
+      RiskEventPublisher p,
+      RiskDataPreparationService preparation) {
     users = u;
     assets = a;
     jobs = j;
     publisher = p;
+    this.preparation = preparation;
   }
 
   public RiskCalculationJob request(Long userId, Long assetId) {
@@ -36,22 +42,32 @@ public class RiskCalculationRequestService {
     if (asset.getAssetType() != AssetType.BOND_ISSUER && asset.getAssetType() != AssetType.REIT)
       throw new BusinessException(ErrorCode.RISK_ASSET_NOT_SUPPORTED);
     RiskCalculationJob job;
+    boolean collecting = !preparation.hasRequiredData(asset, java.time.LocalDate.now());
     try {
-      String version =
-          asset.getAssetType() == AssetType.REIT ? REIT_VERSION : CORPORATE_VERSION;
-      job = jobs.create(userId, assetId, version);
+      String version = asset.getAssetType() == AssetType.REIT ? REIT_VERSION : CORPORATE_VERSION;
+      job = jobs.create(userId, assetId, version, collecting);
     } catch (DataIntegrityViolationException e) {
       throw new BusinessException(ErrorCode.RISK_CALCULATION_ALREADY_RUNNING);
     }
     try {
-      publisher.publishRequested(
-          new RiskScoreRequestedEvent(job.getJobId(), assetId, userId, Instant.now()));
-    } catch (RiskEventPublishException e) {
+      if (collecting) {
+        preparation.requestCollection(job, asset);
+      } else {
+        publisher.publishRequested(
+            new RiskScoreRequestedEvent(job.getJobId(), assetId, userId, Instant.now()));
+      }
+    } catch (RiskEventPublishException exception) {
       jobs.fail(
           job.getJobId(),
           ErrorCode.RISK_KAFKA_PUBLISH_FAILED.getCode(),
           ErrorCode.RISK_KAFKA_PUBLISH_FAILED.getMessage());
       throw new BusinessException(ErrorCode.RISK_KAFKA_PUBLISH_FAILED);
+    } catch (BusinessException exception) {
+      jobs.fail(
+          job.getJobId(),
+          ErrorCode.RISK_DATA_COLLECTION_FAILED.getCode(),
+          exception.getErrorCode().getMessage());
+      throw exception;
     }
     return job;
   }

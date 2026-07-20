@@ -5,6 +5,7 @@ import { AlertTriangle, Building2, Play } from "lucide-react";
 import { CommonChart } from "@/components/common/common-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiErrorMessage } from "@/lib/api/error-message";
 import {
   getLatestRisk,
   getRiskHistory,
@@ -28,15 +29,27 @@ export function ReitRiskOverview({ assetId }: { assetId: number }) {
   const [score, setScore] = useState<RiskScore | null>(null);
   const [history, setHistory] = useState<RiskScore[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const active = job?.status === "REQUESTED" || job?.status === "RUNNING";
+  const active =
+    job?.status === "COLLECTING" ||
+    job?.status === "REQUESTED" ||
+    job?.status === "RUNNING";
 
   useEffect(() => {
-    void Promise.all([getLatestRisk(assetId), getRiskHistory(assetId)])
-      .then(([latest, previous]) => {
-        setScore(latest);
-        setHistory(previous);
-      })
-      .catch(() => undefined);
+    const refresh = () => {
+      void Promise.all([getLatestRisk(assetId), getRiskHistory(assetId)])
+        .then(([latest, previous]) => {
+          setScore(latest);
+          setHistory(previous);
+        })
+        .catch(() => undefined);
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
   }, [assetId]);
 
   useEffect(() => {
@@ -62,8 +75,13 @@ export function ReitRiskOverview({ assetId }: { assetId: number }) {
     setError(null);
     try {
       setJob(await requestRiskCalculation(assetId));
-    } catch {
-      setError("REIT risk calculation could not be requested.");
+    } catch (requestError) {
+      setError(
+        apiErrorMessage(
+          requestError,
+          "REIT risk calculation could not be requested.",
+        ),
+      );
     }
   }
 
@@ -92,8 +110,23 @@ export function ReitRiskOverview({ assetId }: { assetId: number }) {
         </Button>
       </div>
       {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      {active ? (
+        <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
+          {job?.status === "COLLECTING"
+            ? "Collecting DART data and preparing REIT metrics."
+            : job?.status === "REQUESTED"
+              ? "REIT metrics are ready. Waiting for the risk calculator."
+              : "Calculating the REIT risk score from the stored data."}
+        </p>
+      ) : null}
       {score ? (
         <>
+          {score.dataQuality !== "COMPLETE" ? (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+              일부 리츠 전용 원천 데이터가 없어 부분 점수만 계산되었습니다. 0점은 안전을
+              뜻하지 않습니다. 미확보 범주: {score.missingCategories || "상세 지표"}
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-3">
             <Metric title="REIT risk score" value={`${score.totalScore}/100`} />
             <Metric title="Grade / status" value={`${score.riskGrade} / ${score.defaultStatus}`} />
@@ -146,7 +179,7 @@ function parseEvidence(factor: TopRiskFactor): Record<string, unknown> {
 
 function evidenceCard(title: string, factors: TopRiskFactor[], signals: string[], keys: string[]) {
   const factor = factors.find((item) => signals.includes(item.signalType));
-  if (!factor) return { title, value: "No risk signal" };
+  if (!factor) return { title, value: "미확보 또는 점수화 신호 없음" };
   const evidence = parseEvidence(factor);
   const key = keys.find((candidate) => evidence[candidate] !== undefined);
   return { title, value: key ? String(evidence[key]) : "Risk detected" };

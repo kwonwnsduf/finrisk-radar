@@ -15,4 +15,12 @@ public interface RiskCalculationJobRepository extends JpaRepository<RiskCalculat
               + " updated_at=:started WHERE job_id=:id AND status='REQUESTED'",
       nativeQuery = true)
   int markRunning(@Param("id") UUID id, @Param("started") LocalDateTime started);
+
+  @Modifying
+  @Query(
+      value =
+          "UPDATE risk_calculation_jobs SET status='REQUESTED', updated_at=:updated"
+              + " WHERE job_id=:id AND status='COLLECTING'",
+      nativeQuery = true)
+  int markRequested(@Param("id") UUID id, @Param("updated") LocalDateTime updated);
 }

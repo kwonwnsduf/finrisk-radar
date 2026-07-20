@@ -1,6 +1,7 @@
 package com.finrisk.radar.document.service;
 
 import com.finrisk.radar.document.*;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.*;
@@ -43,5 +44,12 @@ public class DocumentCollectionJobService {
   public DocumentCollectionJob get(UUID id) {
     return jobs.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Document collection job not found."));
+  }
+
+  @Transactional(readOnly = true)
+  public List<DocumentCollectionJob> recent(Long assetId) {
+    return assetId == null
+        ? jobs.findTop50ByOrderByRequestedAtDesc()
+        : jobs.findTop50ByAssetIdOrderByRequestedAtDesc(assetId);
   }
 }

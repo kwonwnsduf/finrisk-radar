@@ -24,7 +24,11 @@ public class RiskController {
   }
 
   @PostMapping("/assets/{assetId}/calculations")
-  @Operation(summary = "Request asynchronous corporate risk calculation")
+  @Operation(
+      summary = "Collect required source data and request asynchronous risk calculation",
+      description =
+          "If the latest required DART data is missing, the job enters COLLECTING. Successful"
+              + " collection stores normalized data and automatically starts calculation.")
   public ResponseEntity<ApiResponse<RiskJobResponse>> calculate(
       @AuthenticationPrincipal CustomUserPrincipal p, @PathVariable Long assetId) {
     RiskCalculationJob j = requests.request(p.userId(), assetId);

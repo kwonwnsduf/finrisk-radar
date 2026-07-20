@@ -82,7 +82,7 @@ public enum ErrorCode {
   RISK_ASSET_NOT_SUPPORTED(
       HttpStatus.UNPROCESSABLE_ENTITY,
       "RISK_001",
-      "Only bond issuer assets support corporate risk calculation."),
+      "Only bond issuer and REIT assets support risk calculation."),
   RISK_JOB_NOT_FOUND(HttpStatus.NOT_FOUND, "RISK_002", "Risk calculation job was not found."),
   RISK_JOB_FORBIDDEN(
       HttpStatus.FORBIDDEN, "RISK_003", "You cannot access this risk calculation job."),
@@ -103,7 +103,15 @@ public enum ErrorCode {
   RISK_REIT_METRIC_NOT_FOUND(
       HttpStatus.UNPROCESSABLE_ENTITY,
       "RISK_011",
-      "REIT metrics required for risk calculation were not found.");
+      "REIT metrics required for risk calculation were not found."),
+  RISK_DATA_COLLECTION_FAILED(
+      HttpStatus.BAD_GATEWAY,
+      "RISK_012",
+      "Required source data could not be collected for risk calculation."),
+  RISK_DATA_PREPARATION_FAILED(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "RISK_013",
+      "Collected source data could not be prepared for risk calculation.");
 
   private final HttpStatus httpStatus;
   private final String code;

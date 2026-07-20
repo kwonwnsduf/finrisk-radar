@@ -3,6 +3,7 @@ package com.finrisk.radar.document.api;
 import com.finrisk.radar.auth.jwt.CustomUserPrincipal;
 import com.finrisk.radar.document.*;
 import com.finrisk.radar.document.service.CreditEventReviewService;
+import com.finrisk.radar.document.service.DocumentRiskRecalculationCoordinator;
 import com.finrisk.radar.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.*;
@@ -15,14 +16,17 @@ public class CreditEventCandidateAdminController {
   private final CreditEventCandidateRepository candidates;
   private final DocumentRiskMatchRepository matches;
   private final CreditEventReviewService reviews;
+  private final DocumentRiskRecalculationCoordinator recalculations;
 
   public CreditEventCandidateAdminController(
       CreditEventCandidateRepository candidates,
       DocumentRiskMatchRepository matches,
-      CreditEventReviewService reviews) {
+      CreditEventReviewService reviews,
+      DocumentRiskRecalculationCoordinator recalculations) {
     this.candidates = candidates;
     this.matches = matches;
     this.reviews = reviews;
+    this.recalculations = recalculations;
   }
 
   @GetMapping
@@ -53,6 +57,13 @@ public class CreditEventCandidateAdminController {
       @PathVariable Long id,
       @Valid @RequestBody CandidateReviewRequest r) {
     return ApiResponse.success(response(reviews.reject(id, p.userId(), r.reviewNote())));
+  }
+
+  @PostMapping("/{id}/recalculate")
+  public ApiResponse<CandidateResponse> recalculate(
+      @AuthenticationPrincipal CustomUserPrincipal p, @PathVariable Long id) {
+    recalculations.retryNow(id, p.userId());
+    return ApiResponse.success(response(candidates.findById(id).orElseThrow()));
   }
 
   private CandidateResponse response(CreditEventCandidate c) {

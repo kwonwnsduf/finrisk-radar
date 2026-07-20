@@ -45,6 +45,9 @@ public class Asset extends BaseTimeEntity {
   @Column(name = "market_price_asset_id")
   private Long marketPriceAssetId;
 
+  @Column(name = "dart_corp_code", length = 20)
+  private String dartCorpCode;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "asset_type", nullable = false, length = 30)
   private AssetType assetType;
@@ -81,6 +84,10 @@ public class Asset extends BaseTimeEntity {
       String currency,
       AssetType assetType) {
     apply(name, ticker, market, sector, country, currency, assetType);
+  }
+
+  public void assignDartCorpCode(String dartCorpCode) {
+    this.dartCorpCode = trimToNull(dartCorpCode);
   }
 
   private void apply(
@@ -149,5 +156,9 @@ public class Asset extends BaseTimeEntity {
 
   public Long getMarketPriceAssetId() {
     return marketPriceAssetId;
+  }
+
+  public String getDartCorpCode() {
+    return dartCorpCode;
   }
 }

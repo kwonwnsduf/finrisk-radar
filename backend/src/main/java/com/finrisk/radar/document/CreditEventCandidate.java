@@ -60,6 +60,15 @@ public class CreditEventCandidate extends BaseTimeEntity {
   @Column(name = "recalculation_job_id")
   private UUID recalculationJobId;
 
+  @Column(name = "recalculation_attempt_count", nullable = false)
+  private int recalculationAttemptCount;
+
+  @Column(name = "recalculation_last_attempted_at")
+  private LocalDateTime recalculationLastAttemptedAt;
+
+  @Column(name = "recalculation_last_error", length = 1000)
+  private String recalculationLastError;
+
   protected CreditEventCandidate() {}
 
   public static CreditEventCandidate pending(
@@ -104,10 +113,42 @@ public class CreditEventCandidate extends BaseTimeEntity {
   public void recalculationRequested(UUID job) {
     recalculationStatus = RecalculationStatus.REQUESTED;
     recalculationJobId = job;
+    recalculationLastError = null;
   }
 
-  public void recalculationDeferred() {
+  public void recalculationAttempted() {
+    recalculationAttemptCount++;
+    recalculationLastAttemptedAt = LocalDateTime.now();
+  }
+
+  public void recalculationDeferred(String message, int maxAttempts) {
+    recalculationStatus =
+        recalculationAttemptCount >= maxAttempts
+            ? RecalculationStatus.FAILED
+            : RecalculationStatus.DEFERRED;
+    recalculationLastError = safeMessage(message);
+  }
+
+  public void recalculationCompleted() {
+    recalculationStatus = RecalculationStatus.COMPLETED;
+    recalculationLastError = null;
+  }
+
+  public void recalculationFailed(String message) {
+    recalculationStatus = RecalculationStatus.FAILED;
+    recalculationLastError = safeMessage(message);
+  }
+
+  public void resetRecalculationRetry() {
     recalculationStatus = RecalculationStatus.DEFERRED;
+    recalculationJobId = null;
+    recalculationAttemptCount = 0;
+    recalculationLastError = null;
+  }
+
+  private String safeMessage(String message) {
+    if (message == null || message.isBlank()) return "Risk recalculation request failed.";
+    return message.substring(0, Math.min(1000, message.length()));
   }
 
   public Long getId() {
@@ -156,5 +197,17 @@ public class CreditEventCandidate extends BaseTimeEntity {
 
   public Long getReviewedByUserId() {
     return reviewedByUserId;
+  }
+
+  public int getRecalculationAttemptCount() {
+    return recalculationAttemptCount;
+  }
+
+  public LocalDateTime getRecalculationLastAttemptedAt() {
+    return recalculationLastAttemptedAt;
+  }
+
+  public String getRecalculationLastError() {
+    return recalculationLastError;
   }
 }

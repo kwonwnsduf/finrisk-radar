@@ -57,6 +57,7 @@ app:
       enabled: ${DOCUMENT_COLLECTION_SCHEDULER_ENABLED:false}
       cron: ${DOCUMENT_COLLECTION_SCHEDULER_CRON:0 0 * * * *}
     recalculation-retry-delay: ${DOCUMENT_RECALCULATION_RETRY_DELAY:60000}
+    recalculation-max-attempts: ${DOCUMENT_RECALCULATION_MAX_ATTEMPTS:5}
 
 management:
   prometheus:

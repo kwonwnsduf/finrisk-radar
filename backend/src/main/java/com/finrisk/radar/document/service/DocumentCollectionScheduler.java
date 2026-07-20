@@ -4,6 +4,7 @@ import com.finrisk.radar.asset.*;
 import com.finrisk.radar.document.DocumentSourceType;
 import java.time.LocalDate;
 import java.util.*;
+import org.slf4j.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnProperty(prefix = "app.documents.scheduler", name = "enabled", havingValue = "true")
 public class DocumentCollectionScheduler {
+  private static final Logger log = LoggerFactory.getLogger(DocumentCollectionScheduler.class);
   private final AssetRepository assets;
   private final DocumentCollectionRequestService requests;
 
@@ -32,7 +34,12 @@ public class DocumentCollectionScheduler {
               List.of(DocumentSourceType.NAVER_NEWS, DocumentSourceType.OPEN_DART),
               today.minusDays(1),
               today);
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException e) {
+          log.error(
+              "Scheduled document collection request failed: assetId={}, ticker={}",
+              a.getId(),
+              a.getTicker(),
+              e);
         }
   }
 }

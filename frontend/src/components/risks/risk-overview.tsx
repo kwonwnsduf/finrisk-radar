@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Activity, AlertTriangle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiErrorMessage } from "@/lib/api/error-message";
 import {
   getLatestRisk,
   getRiskJob,
@@ -16,11 +17,23 @@ export function RiskOverview({ assetId }: { assetId: number }) {
   const [job, setJob] = useState<RiskJob | null>(null);
   const [score, setScore] = useState<RiskScore | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const active = job?.status === "REQUESTED" || job?.status === "RUNNING";
+  const active =
+    job?.status === "COLLECTING" ||
+    job?.status === "REQUESTED" ||
+    job?.status === "RUNNING";
   useEffect(() => {
-    getLatestRisk(assetId)
-      .then(setScore)
-      .catch(() => undefined);
+    const refresh = () => {
+      void getLatestRisk(assetId)
+        .then(setScore)
+        .catch(() => undefined);
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
   }, [assetId]);
   useEffect(() => {
     if (!active || !job) return;
@@ -42,8 +55,10 @@ export function RiskOverview({ assetId }: { assetId: number }) {
     setError(null);
     try {
       setJob(await requestRiskCalculation(assetId));
-    } catch {
-      setError("Risk calculation could not be requested.");
+    } catch (requestError) {
+      setError(
+        apiErrorMessage(requestError, "Risk calculation could not be requested."),
+      );
     }
   }
   const categories = score
@@ -77,6 +92,15 @@ export function RiskOverview({ assetId }: { assetId: number }) {
           className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
         >
           {error}
+        </p>
+      ) : null}
+      {active ? (
+        <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
+          {job?.status === "COLLECTING"
+            ? "Collecting and storing the required DART data."
+            : job?.status === "REQUESTED"
+              ? "Source data is ready. Waiting for the risk calculator."
+              : "Calculating the risk score from the stored data."}
         </p>
       ) : null}
       {score ? (

@@ -126,4 +126,16 @@ public class DocumentCollectionJob extends BaseTimeEntity {
   public String getFailureMessage() {
     return failureMessage;
   }
+
+  public LocalDateTime getRequestedAt() {
+    return requestedAt;
+  }
+
+  public LocalDateTime getStartedAt() {
+    return startedAt;
+  }
+
+  public LocalDateTime getCompletedAt() {
+    return completedAt;
+  }
 }

@@ -52,6 +52,13 @@ public class DocumentAdminController {
     return ApiResponse.success(DocumentCollectionJobResponse.from(jobs.get(id)));
   }
 
+  @GetMapping("/document-collections")
+  public ApiResponse<List<DocumentCollectionJobResponse>> jobs(
+      @RequestParam(required = false) Long assetId) {
+    return ApiResponse.success(
+        jobs.recent(assetId).stream().map(DocumentCollectionJobResponse::from).toList());
+  }
+
   @PostMapping("/documents/{documentId}/asset-mappings")
   public ApiResponse<Long> map(@PathVariable Long documentId, @RequestParam Long assetId) {
     documents.findById(documentId).orElseThrow();

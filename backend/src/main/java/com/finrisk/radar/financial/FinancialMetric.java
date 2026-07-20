@@ -100,6 +100,12 @@ public class FinancialMetric extends BaseTimeEntity {
     this.interestCoverageRatio = values.interestCoverageRatio();
   }
 
+  public void collected(LocalDate periodEndDate, String reportCode, LocalDateTime fetchedAt) {
+    this.periodEndDate = periodEndDate;
+    this.reportCode = reportCode;
+    this.fetchedAt = fetchedAt;
+  }
+
   public Long getId() {
     return id;
   }

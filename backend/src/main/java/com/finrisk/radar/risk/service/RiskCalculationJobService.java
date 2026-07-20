@@ -17,15 +17,32 @@ public class RiskCalculationJobService {
 
   @Transactional
   public RiskCalculationJob create(Long user, Long asset, String version) {
+    return create(user, asset, version, false);
+  }
+
+  @Transactional
+  public RiskCalculationJob create(Long user, Long asset, String version, boolean collecting) {
     if (jobs.existsByAssetIdAndStatusIn(
-        asset, List.of(RiskCalculationStatus.REQUESTED, RiskCalculationStatus.RUNNING)))
+        asset,
+        List.of(
+            RiskCalculationStatus.COLLECTING,
+            RiskCalculationStatus.REQUESTED,
+            RiskCalculationStatus.RUNNING)))
       throw new BusinessException(ErrorCode.RISK_CALCULATION_ALREADY_RUNNING);
-    return jobs.save(RiskCalculationJob.requested(user, asset, version, LocalDate.now()));
+    return jobs.save(
+        collecting
+            ? RiskCalculationJob.collecting(user, asset, version, LocalDate.now())
+            : RiskCalculationJob.requested(user, asset, version, LocalDate.now()));
   }
 
   @Transactional
   public boolean markRunning(UUID id) {
     return jobs.markRunning(id, LocalDateTime.now()) == 1;
+  }
+
+  @Transactional
+  public boolean markRequested(UUID id) {
+    return jobs.markRequested(id, LocalDateTime.now()) == 1;
   }
 
   @Transactional(readOnly = true)

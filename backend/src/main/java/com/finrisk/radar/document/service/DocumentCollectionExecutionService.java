@@ -38,7 +38,7 @@ public class DocumentCollectionExecutionService {
       Asset asset = assets.findById(job.getAssetId()).orElseThrow();
       String corp =
           job.getSourceType() == DocumentSourceType.OPEN_DART
-              ? corpCodes.findCorpCodeByStockCode(asset.getTicker())
+              ? corpCodes.findCorpCode(asset)
               : null;
       List<Result> results = new ArrayList<>();
       for (CollectedDocument raw :

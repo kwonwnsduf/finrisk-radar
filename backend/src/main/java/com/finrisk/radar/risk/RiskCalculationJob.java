@@ -50,11 +50,21 @@ public class RiskCalculationJob extends BaseTimeEntity {
 
   public static RiskCalculationJob requested(
       Long user, Long asset, String version, LocalDate date) {
+    return create(user, asset, version, date, RiskCalculationStatus.REQUESTED);
+  }
+
+  public static RiskCalculationJob collecting(
+      Long user, Long asset, String version, LocalDate date) {
+    return create(user, asset, version, date, RiskCalculationStatus.COLLECTING);
+  }
+
+  private static RiskCalculationJob create(
+      Long user, Long asset, String version, LocalDate date, RiskCalculationStatus status) {
     RiskCalculationJob j = new RiskCalculationJob();
     j.jobId = UUID.randomUUID();
     j.userId = user;
     j.assetId = asset;
-    j.status = RiskCalculationStatus.REQUESTED;
+    j.status = status;
     j.requestedAt = LocalDateTime.now();
     j.ruleVersion = version;
     j.dataAsOfDate = date;
