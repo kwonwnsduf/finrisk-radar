@@ -63,6 +63,10 @@ public class Document extends BaseTimeEntity {
   @Column(name = "content_version", nullable = false)
   private int contentVersion;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "content_scope", nullable = false, length = 20)
+  private DocumentContentScope contentScope;
+
   protected Document() {}
 
   public static Document create(
@@ -77,7 +81,8 @@ public class Document extends BaseTimeEntity {
       LocalDateTime publishedAt,
       String rawPath,
       String contentHash,
-      String urlHash) {
+      String urlHash,
+      DocumentContentScope contentScope) {
     Document d = new Document();
     d.documentType = type;
     d.sourceType = source;
@@ -94,17 +99,29 @@ public class Document extends BaseTimeEntity {
     d.canonicalUrlHash = urlHash;
     d.language = "ko";
     d.contentVersion = 1;
+    d.contentScope = contentScope;
     return d;
   }
 
-  public void refresh(String title, String content, String summary, String rawPath, String hash) {
+  public void refresh(
+      String title,
+      String content,
+      String summary,
+      String rawPath,
+      String hash,
+      DocumentContentScope contentScope) {
+    boolean titleChanged = !java.util.Objects.equals(this.title, title);
+    boolean contentChanged = !this.contentHash.equals(hash);
     this.title = title;
     this.summary = summary;
     this.rawS3Path = rawPath;
     this.fetchedAt = LocalDateTime.now();
-    if (!this.contentHash.equals(hash)) {
+    this.contentScope = contentScope;
+    if (contentChanged) {
       this.content = content;
       this.contentHash = hash;
+    }
+    if (contentChanged || titleChanged) {
       this.contentVersion++;
     }
   }
@@ -163,5 +180,9 @@ public class Document extends BaseTimeEntity {
 
   public int getContentVersion() {
     return contentVersion;
+  }
+
+  public DocumentContentScope getContentScope() {
+    return contentScope;
   }
 }

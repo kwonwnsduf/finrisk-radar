@@ -58,6 +58,7 @@ public class OpenDartDisclosureCollector implements DocumentSourceCollector {
                 url,
                 receipt,
                 date,
+                DocumentContentScope.forExtractedText(title, extracted.text()),
                 zip,
                 "application/zip",
                 "zip",

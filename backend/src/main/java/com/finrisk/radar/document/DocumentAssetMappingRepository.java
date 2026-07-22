@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 public interface DocumentAssetMappingRepository extends JpaRepository<DocumentAssetMapping, Long> {
   List<DocumentAssetMapping> findByDocumentId(Long documentId);
 
+  List<DocumentAssetMapping> findByDocumentIdIn(Collection<Long> documentIds);
+
   List<DocumentAssetMapping> findByAssetIdOrderByDocumentIdDesc(Long assetId);
 
   Optional<DocumentAssetMapping> findByDocumentIdAndAssetId(Long documentId, Long assetId);

@@ -8,6 +8,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finrisk.radar.asset.*;
+import com.finrisk.radar.document.DocumentContentScope;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,7 @@ class NaverNewsSearchCollectorTest {
     assertThat(result.get(0).content())
         .isEqualTo("Samsung refinancing news. The company reported USD 100M refinancing.");
     assertThat(result.get(0).sourceUrl()).isEqualTo("https://example.com/news/1");
+    assertThat(result.get(0).contentScope()).isEqualTo(DocumentContentScope.SNIPPET);
     server.verify();
   }
 }

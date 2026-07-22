@@ -29,6 +29,8 @@ public enum ErrorCode {
   USER_PLAN_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "USAGE_005", "User plan is unavailable."),
   USAGE_SERVICE_UNAVAILABLE(
       HttpStatus.SERVICE_UNAVAILABLE, "USAGE_006", "Usage service is temporarily unavailable."),
+  RAG_SEARCH_LIMIT_EXCEEDED(
+      HttpStatus.TOO_MANY_REQUESTS, "USAGE_007", "Monthly RAG search limit exceeded."),
   WATCHLIST_ITEM_ALREADY_EXISTS(
       HttpStatus.CONFLICT, "WATCHLIST_001", "Asset is already in the watchlist."),
   WATCHLIST_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "WATCHLIST_002", "Watchlist item was not found."),
@@ -111,7 +113,15 @@ public enum ErrorCode {
   RISK_DATA_PREPARATION_FAILED(
       HttpStatus.UNPROCESSABLE_ENTITY,
       "RISK_013",
-      "Collected source data could not be prepared for risk calculation.");
+      "Collected source data could not be prepared for risk calculation."),
+  RAG_EMBEDDING_UNAVAILABLE(HttpStatus.BAD_GATEWAY, "RAG_001", "Embedding service is unavailable."),
+  RAG_EMBEDDING_JOB_NOT_FOUND(
+      HttpStatus.NOT_FOUND, "RAG_002", "Document embedding job was not found."),
+  RAG_REBUILD_SCOPE_REQUIRED(
+      HttpStatus.BAD_REQUEST, "RAG_003", "A bounded rebuild scope is required."),
+  RAG_EMBEDDING_REQUEST_FAILED(
+      HttpStatus.SERVICE_UNAVAILABLE, "RAG_004", "Embedding request could not be published."),
+  RAG_DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RAG_005", "Document was not found.");
 
   private final HttpStatus httpStatus;
   private final String code;

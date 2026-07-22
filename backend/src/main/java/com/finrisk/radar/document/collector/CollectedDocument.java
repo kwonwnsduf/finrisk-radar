@@ -13,6 +13,7 @@ public record CollectedDocument(
     String sourceUrl,
     String externalId,
     LocalDateTime publishedAt,
+    DocumentContentScope contentScope,
     byte[] rawPayload,
     String rawContentType,
     String rawExtension,

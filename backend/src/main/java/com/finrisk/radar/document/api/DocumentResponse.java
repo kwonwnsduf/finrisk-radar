@@ -15,6 +15,7 @@ public record DocumentResponse(
     String sourceUrl,
     LocalDateTime publishedAt,
     int contentVersion,
+    DocumentContentScope contentScope,
     List<Long> assetIds,
     int riskMatchCount) {
   public static DocumentResponse from(Document d, List<Long> assets, int count) {
@@ -29,6 +30,7 @@ public record DocumentResponse(
         d.getSourceUrl(),
         d.getPublishedAt(),
         d.getContentVersion(),
+        d.getContentScope(),
         assets,
         count);
   }

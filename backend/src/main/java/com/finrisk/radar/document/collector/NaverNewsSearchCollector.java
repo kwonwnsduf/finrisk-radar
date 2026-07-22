@@ -90,6 +90,7 @@ public class NaverNewsSearchCollector implements DocumentSourceCollector {
                 link,
                 link,
                 published,
+                DocumentContentScope.SNIPPET,
                 mapper.writeValueAsBytes(item),
                 "application/json",
                 "json",

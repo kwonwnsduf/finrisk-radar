@@ -2,6 +2,7 @@ package com.finrisk.radar;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,19 +11,20 @@ import com.finrisk.radar.asset.AssetRepository;
 import com.finrisk.radar.backtest.BacktestJobRepository;
 import com.finrisk.radar.backtest.BacktestResultRepository;
 import com.finrisk.radar.collector.log.CollectionLogRepository;
+import com.finrisk.radar.document.*;
 import com.finrisk.radar.financial.DartCorpCodeRepository;
 import com.finrisk.radar.financial.DebtMaturityRepository;
 import com.finrisk.radar.financial.FinancialCollectionLogRepository;
 import com.finrisk.radar.financial.FinancialMetricRepository;
 import com.finrisk.radar.marketprice.MarketPriceRepository;
 import com.finrisk.radar.marketprice.MarketPriceWriter;
-import com.finrisk.radar.document.*;
+import com.finrisk.radar.rag.*;
 import com.finrisk.radar.risk.AssetRelationshipRepository;
 import com.finrisk.radar.risk.CreditEventRepository;
+import com.finrisk.radar.risk.ReitMetricRepository;
 import com.finrisk.radar.risk.RiskCalculationJobRepository;
 import com.finrisk.radar.risk.RiskScoreRepository;
 import com.finrisk.radar.risk.RiskSignalRepository;
-import com.finrisk.radar.risk.ReitMetricRepository;
 import com.finrisk.radar.user.UserRepository;
 import com.finrisk.radar.watchlist.WatchlistRepository;
 import org.junit.jupiter.api.Test;
@@ -87,6 +89,9 @@ class BackendApplicationTests {
   @MockitoBean private DocumentAssetMappingRepository documentAssetMappingRepository;
   @MockitoBean private DocumentRiskMatchRepository documentRiskMatchRepository;
   @MockitoBean private CreditEventCandidateRepository creditEventCandidateRepository;
+  @MockitoBean private DocumentEmbeddingJobRepository documentEmbeddingJobRepository;
+  @MockitoBean private DocumentChunkRepository documentChunkRepository;
+  @MockitoBean private RagVectorSearchRepository ragVectorSearchRepository;
 
   @Autowired private MockMvc mockMvc;
 
@@ -109,6 +114,17 @@ class BackendApplicationTests {
         .perform(get("/api/users/me"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.code").value("AUTH_003"));
+  }
+
+  @Test
+  void ragSearchRequiresAuthentication() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/rag/search")
+                .contentType("application/json")
+                .content("{\"query\":\"liquidity risk\"}"))
+        .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.code").value("AUTH_003"));
   }
 

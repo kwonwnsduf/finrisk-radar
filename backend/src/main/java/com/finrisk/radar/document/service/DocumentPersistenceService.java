@@ -69,9 +69,11 @@ public class DocumentPersistenceService {
                         raw.publishedAt(),
                         path,
                         hash,
-                        normalizer.hash(url)));
+                        normalizer.hash(url),
+                        raw.contentScope()));
     if (document.getId() != null)
-      document.refresh(title, content, normalizer.text(raw.summary()), path, hash);
+      document.refresh(
+          title, content, normalizer.text(raw.summary()), path, hash, raw.contentScope());
     return documents.save(document);
   }
 }
