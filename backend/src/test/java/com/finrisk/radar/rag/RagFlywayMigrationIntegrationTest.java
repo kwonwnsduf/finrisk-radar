@@ -22,7 +22,7 @@ class RagFlywayMigrationIntegrationTest {
           .withPassword("test");
 
   @Test
-  void v15MigratesTheFullSchemaWithOnlyJobIndexChunkUniqueness() {
+  void latestSchemaMigratesRagAndAiReports() {
     Flyway flyway =
         Flyway.configure()
             .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
@@ -51,5 +51,23 @@ class RagFlywayMigrationIntegrationTest {
                     + " contype = 'u'",
                 String.class))
         .containsExactly("uq_document_chunks_job_index");
+    assertThat(jdbc.queryForObject("SELECT to_regclass('public.ai_reports')", String.class))
+        .isEqualTo("ai_reports");
+    assertThat(
+            jdbc.queryForList(
+                "SELECT column_name FROM information_schema.columns "
+                    + "WHERE table_name = 'backtest_jobs' AND column_name LIKE 'parser_%'",
+                String.class))
+        .containsExactlyInAnyOrder(
+            "parser_model",
+            "parser_prompt_version",
+            "parser_input_token_count",
+            "parser_output_token_count");
+    assertThat(
+            jdbc.queryForList(
+                "SELECT conname FROM pg_constraint "
+                    + "WHERE conrelid = 'ai_reports'::regclass AND contype = 'c'",
+                String.class))
+        .contains("ck_ai_reports_target");
   }
 }

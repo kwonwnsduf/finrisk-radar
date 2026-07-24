@@ -1,5 +1,8 @@
 package com.finrisk.radar.rag;
 
+import com.finrisk.radar.document.DocumentContentScope;
+import com.finrisk.radar.document.DocumentSourceType;
+import com.finrisk.radar.document.DocumentType;
 import java.sql.Timestamp;
 import java.util.*;
 import org.springframework.jdbc.core.namedparam.*;
@@ -85,10 +88,9 @@ public class RagVectorSearchRepository {
                 rs.getString("title"),
                 rs.getString("chunk_content"),
                 rs.getDouble("similarity"),
-                com.finrisk.radar.document.DocumentType.valueOf(rs.getString("document_type")),
-                com.finrisk.radar.document.DocumentSourceType.valueOf(rs.getString("source_type")),
-                com.finrisk.radar.document.DocumentContentScope.valueOf(
-                    rs.getString("content_scope")),
+                DocumentType.valueOf(rs.getString("document_type")),
+                DocumentSourceType.valueOf(rs.getString("source_type")),
+                DocumentContentScope.valueOf(rs.getString("content_scope")),
                 rs.getString("source_name"),
                 rs.getString("source_url"),
                 rs.getTimestamp("published_at") == null

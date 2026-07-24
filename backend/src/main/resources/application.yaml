@@ -10,7 +10,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event,com.finrisk.radar.document.event,com.finrisk.radar.rag.event
+        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event,com.finrisk.radar.document.event,com.finrisk.radar.rag.event,com.finrisk.radar.report.event
   security:
     oauth2:
       client:
@@ -67,6 +67,15 @@ app:
       batch-size: ${OPENAI_EMBEDDING_BATCH_SIZE:32}
       connect-timeout: ${OPENAI_CONNECT_TIMEOUT:5s}
       read-timeout: ${OPENAI_READ_TIMEOUT:30s}
+  llm:
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_LLM_MODEL:}
+      connect-timeout: ${OPENAI_LLM_CONNECT_TIMEOUT:5s}
+      read-timeout: ${OPENAI_LLM_READ_TIMEOUT:60s}
+      max-output-tokens: ${OPENAI_LLM_MAX_OUTPUT_TOKENS:2000}
+      max-context-characters: ${OPENAI_LLM_MAX_CONTEXT_CHARACTERS:24000}
 
 management:
   prometheus:

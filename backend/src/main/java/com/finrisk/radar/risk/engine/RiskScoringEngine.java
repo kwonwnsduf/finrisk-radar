@@ -1,5 +1,6 @@
 package com.finrisk.radar.risk.engine;
 
+import com.finrisk.radar.asset.AssetType;
 import com.finrisk.radar.risk.*;
 import java.time.*;
 import java.util.*;
@@ -125,7 +126,7 @@ public class RiskScoringEngine {
   }
 
   private RiskDataQuality quality(RiskEvaluationContext c, int rate) {
-    if (c.asset().getAssetType() == com.finrisk.radar.asset.AssetType.REIT) {
+    if (c.asset().getAssetType() == AssetType.REIT) {
       LocalDate period = c.latestReitMetric().getPeriod();
       if (period.isBefore(c.asOfDate().minusDays(370))) return RiskDataQuality.STALE;
       return rate == 100 ? RiskDataQuality.COMPLETE : RiskDataQuality.PARTIAL;

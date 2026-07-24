@@ -1,8 +1,10 @@
 package com.finrisk.radar.document.api;
 
 import com.finrisk.radar.document.DocumentSourceType;
+import com.finrisk.radar.document.DocumentType;
 import com.finrisk.radar.document.service.DocumentQueryService;
 import com.finrisk.radar.global.response.ApiResponse;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +21,10 @@ public class DocumentController {
   public ApiResponse<List<DocumentResponse>> list(
       @RequestParam(required = false) Long assetId,
       @RequestParam(required = false) DocumentSourceType sourceType,
-      @RequestParam(required = false) com.finrisk.radar.document.DocumentType documentType,
+      @RequestParam(required = false) DocumentType documentType,
       @RequestParam(required = false) Boolean riskOnly,
-      @RequestParam(required = false) java.time.LocalDate from,
-      @RequestParam(required = false) java.time.LocalDate to,
+      @RequestParam(required = false) LocalDate from,
+      @RequestParam(required = false) LocalDate to,
       @RequestParam(required = false) Long cursor,
       @RequestParam(defaultValue = "20") int size) {
     return ApiResponse.success(

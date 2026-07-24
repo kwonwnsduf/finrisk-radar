@@ -1,9 +1,11 @@
 package com.finrisk.radar.document.service;
 
 import com.finrisk.radar.document.*;
+import com.finrisk.radar.risk.RiskSeverity;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.HexFormat;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class CreditEventCandidateService {
 
   @Transactional
   public CreditEventCandidate attach(
-      DocumentRiskMatch match, LocalDate date, com.finrisk.radar.risk.RiskSeverity severity) {
+      DocumentRiskMatch match, LocalDate date, RiskSeverity severity) {
     List<CreditEventCandidate> nearby =
         candidates.findByAssetIdAndEventTypeAndEventDateBetween(
             match.getAssetId(), match.getEventType(), date.minusDays(7), date.plusDays(7));
@@ -78,7 +80,7 @@ public class CreditEventCandidateService {
             + "|"
             + d.getYear()
             + "-"
-            + d.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear())
+            + d.get(WeekFields.ISO.weekOfWeekBasedYear())
             + "|"
             + (m.getExtractedAmount() == null
                 ? m.getSentenceText()

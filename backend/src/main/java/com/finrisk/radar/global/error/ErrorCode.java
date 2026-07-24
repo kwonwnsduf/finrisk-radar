@@ -121,7 +121,28 @@ public enum ErrorCode {
       HttpStatus.BAD_REQUEST, "RAG_003", "A bounded rebuild scope is required."),
   RAG_EMBEDDING_REQUEST_FAILED(
       HttpStatus.SERVICE_UNAVAILABLE, "RAG_004", "Embedding request could not be published."),
-  RAG_DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RAG_005", "Document was not found.");
+  RAG_DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RAG_005", "Document was not found."),
+  REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_001", "AI report was not found."),
+  REPORT_FORBIDDEN(HttpStatus.FORBIDDEN, "REPORT_002", "You cannot access this AI report."),
+  REPORT_ASSET_AMBIGUOUS(
+      HttpStatus.UNPROCESSABLE_ENTITY, "REPORT_003", "The asset name is ambiguous."),
+  REPORT_DATA_INSUFFICIENT(
+      HttpStatus.UNPROCESSABLE_ENTITY, "REPORT_004", "Required report data is unavailable."),
+  REPORT_CONCURRENCY_LIMIT(
+      HttpStatus.CONFLICT, "REPORT_005", "Another AI report is already running."),
+  REPORT_LLM_NOT_CONFIGURED(
+      HttpStatus.SERVICE_UNAVAILABLE, "REPORT_006", "OpenAI API key and model are not configured."),
+  REPORT_INVALID_STRUCTURED_OUTPUT(
+      HttpStatus.BAD_GATEWAY, "REPORT_007", "AI report output was invalid."),
+  REPORT_EVIDENCE_INVALID(HttpStatus.BAD_GATEWAY, "REPORT_008", "AI report evidence was invalid."),
+  REPORT_EVENT_PUBLISH_FAILED(
+      HttpStatus.SERVICE_UNAVAILABLE, "REPORT_009", "AI report request could not be published."),
+  BACKTEST_PARSE_FAILED(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "BACKTEST_006",
+      "Natural-language backtest request could not be parsed."),
+  BACKTEST_CONDITION_INVALID(
+      HttpStatus.BAD_REQUEST, "BACKTEST_007", "Backtest strategy conditions are invalid.");
 
   private final HttpStatus httpStatus;
   private final String code;

@@ -2,6 +2,9 @@
 
 import {
   ChartNoAxesCombined,
+  FileSearch,
+  Bot,
+  Files,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
@@ -23,15 +26,26 @@ const navItems = [
   { href: "/assets", label: "Assets", icon: Search },
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/backtests", label: "Backtests", icon: ChartNoAxesCombined },
+  { href: "/rag", label: "RAG Search", icon: FileSearch },
+  { href: "/ai", label: "AI Agent", icon: Bot },
+  { href: "/reports", label: "AI Reports", icon: Files },
 ];
 
 export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUiStore();
   const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
-  const visibleItems = user?.role === "ROLE_ADMIN"
-    ? [...navItems, { href: "/admin/credit-event-candidates", label: "Event Review", icon: ShieldCheck }]
-    : navItems;
+  const visibleItems =
+    user?.role === "ROLE_ADMIN"
+      ? [
+          ...navItems,
+          {
+            href: "/admin/credit-event-candidates",
+            label: "Event Review",
+            icon: ShieldCheck,
+          },
+        ]
+      : navItems;
 
   return (
     <aside
@@ -45,14 +59,18 @@ export function Sidebar() {
           <Radar className="size-5" aria-hidden="true" />
         </div>
         {!sidebarCollapsed ? (
-          <span className="text-lg font-bold tracking-tight">FinRisk Radar</span>
+          <span className="text-lg font-bold tracking-tight">
+            FinRisk Radar
+          </span>
         ) : null}
       </div>
 
       <nav className="flex-1 p-3" aria-label="Dashboard menu">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const active =
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}

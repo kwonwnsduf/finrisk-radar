@@ -131,3 +131,35 @@ export async function getBacktestJob(jobId: string) {
   );
   return response.data.data;
 }
+
+export interface BacktestPage {
+  items: BacktestJob[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+export interface NaturalBacktestResponse {
+  outcome: "ACCEPTED" | "NEEDS_CLARIFICATION";
+  jobId: string | null;
+  status: BacktestStatus | null;
+  parsedRequest: BacktestCreateRequest | null;
+  missingFields: string[];
+  assetCandidates: { id: number; name: string; ticker: string }[];
+}
+export async function getCompletedBacktests() {
+  const r = await apiClient.get<ApiResponse<BacktestPage>>("/api/backtests", {
+    params: { status: "COMPLETED", size: 50 },
+  });
+  return r.data.data;
+}
+export async function createNaturalBacktest(
+  question: string,
+  assetId?: number,
+) {
+  const r = await apiClient.post<ApiResponse<NaturalBacktestResponse>>(
+    "/api/backtests/natural-language",
+    { question, assetId },
+  );
+  return r.data.data;
+}

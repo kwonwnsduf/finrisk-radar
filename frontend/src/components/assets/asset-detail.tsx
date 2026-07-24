@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, FileSearch, Star } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -94,22 +94,33 @@ export function AssetDetail({ assetId }: { assetId: number }) {
               {notice}
             </p>
           ) : null}
-          <Button
-            className="mt-5 w-full"
-            onClick={() => addMutation.mutate()}
-            disabled={addMutation.isPending}
-          >
-            <Star className="size-4" />
-            관심자산에 추가
-          </Button>
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            <Button
+              onClick={() => addMutation.mutate()}
+              disabled={addMutation.isPending}
+            >
+              <Star className="size-4" />
+              관심자산에 추가
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/rag?assetId=${asset.id}`}>
+                <FileSearch className="size-4" />
+                RAG 문서 검색
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <AssetPriceChart asset={asset} />
       {asset.assetType === "BOND_ISSUER" ? (
         <RiskOverview assetId={asset.id} />
       ) : null}
-      {asset.assetType === "REIT" ? <ReitRiskOverview assetId={asset.id} /> : null}
-      {asset.assetType === "BOND_ISSUER" || asset.assetType === "REIT" ? <DocumentRiskSection assetId={asset.id} /> : null}
+      {asset.assetType === "REIT" ? (
+        <ReitRiskOverview assetId={asset.id} />
+      ) : null}
+      {asset.assetType === "BOND_ISSUER" || asset.assetType === "REIT" ? (
+        <DocumentRiskSection assetId={asset.id} />
+      ) : null}
     </div>
   );
 }

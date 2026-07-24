@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { createBacktestReport } from "@/lib/api/reports";
+import { useRouter } from "next/navigation";
 
 const BASIC_STRATEGIES: { type: StrategyType; label: string }[] = [
   { type: "BUY_AND_HOLD", label: "Buy & Hold" },
@@ -96,12 +98,14 @@ const VALUE_CONDITIONS = new Set<CustomConditionType>([
 ]);
 
 export function BacktestWorkbench() {
+  const router = useRouter();
   const [mode, setMode] = useState<"BASIC" | "CUSTOM">("BASIC");
   const [assetId, setAssetId] = useState("1");
   const [startDate, setStartDate] = useState("2020-01-01");
   const [endDate, setEndDate] = useState("2025-12-31");
   const [initialCash, setInitialCash] = useState("10000000");
-  const [strategyType, setStrategyType] = useState<StrategyType>("BUY_AND_HOLD");
+  const [strategyType, setStrategyType] =
+    useState<StrategyType>("BUY_AND_HOLD");
   const [buyConditions, setBuyConditions] = useState<StrategyCondition[]>([
     { type: "RSI_LESS_THAN", value: 30 },
   ]);
@@ -113,7 +117,8 @@ export function BacktestWorkbench() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeJobId = job?.status === "REQUESTED" || job?.status === "RUNNING" ? job.jobId : null;
+  const activeJobId =
+    job?.status === "REQUESTED" || job?.status === "RUNNING" ? job.jobId : null;
 
   useEffect(() => {
     if (!activeJobId) return;
@@ -156,12 +161,27 @@ export function BacktestWorkbench() {
         endDate,
         initialCash: Number(initialCash),
         strategyType: selectedStrategy,
-        buyConditions: selectedStrategy === "CUSTOM" ? buyConditions : undefined,
-        sellConditions: selectedStrategy === "CUSTOM" ? sellConditions : undefined,
+        buyConditions:
+          selectedStrategy === "CUSTOM" ? buyConditions : undefined,
+        sellConditions:
+          selectedStrategy === "CUSTOM" ? sellConditions : undefined,
       });
       setJob(await getBacktestJob(created.jobId));
     } catch {
       setError("Backtest request failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function analyzeBacktest() {
+    if (!job?.jobId) return;
+    setLoading(true);
+    try {
+      const report = await createBacktestReport(job.jobId);
+      router.push(`/reports/${report.reportId}`);
+    } catch {
+      setError("AI analysis request failed.");
     } finally {
       setLoading(false);
     }
@@ -172,9 +192,15 @@ export function BacktestWorkbench() {
       <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-950">Backtest</h1>
-          <p className="mt-1 text-sm text-slate-500">Strategy engine and custom builder</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Strategy engine and custom builder
+          </p>
         </div>
-        <Button type="button" onClick={runBacktest} disabled={loading || Boolean(activeJobId)}>
+        <Button
+          type="button"
+          onClick={runBacktest}
+          disabled={loading || Boolean(activeJobId)}
+        >
           <Play className="size-4" />
           Run
         </Button>
@@ -188,16 +214,32 @@ export function BacktestWorkbench() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <Field label="Asset ID">
-                <Input value={assetId} onChange={(event) => setAssetId(event.target.value)} inputMode="numeric" />
+                <Input
+                  value={assetId}
+                  onChange={(event) => setAssetId(event.target.value)}
+                  inputMode="numeric"
+                />
               </Field>
               <Field label="Initial cash">
-                <Input value={initialCash} onChange={(event) => setInitialCash(event.target.value)} inputMode="numeric" />
+                <Input
+                  value={initialCash}
+                  onChange={(event) => setInitialCash(event.target.value)}
+                  inputMode="numeric"
+                />
               </Field>
               <Field label="Start">
-                <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
               </Field>
               <Field label="End">
-                <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                />
               </Field>
             </div>
 
@@ -244,7 +286,11 @@ export function BacktestWorkbench() {
               />
             )}
 
-            {error ? <p role="alert" className="text-sm font-semibold text-red-600">{error}</p> : null}
+            {error ? (
+              <p role="alert" className="text-sm font-semibold text-red-600">
+                {error}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -252,9 +298,25 @@ export function BacktestWorkbench() {
           <StatusCard job={job} loading={loading} />
           {job?.result ? (
             <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={analyzeBacktest}
+                disabled={loading}
+              >
+                AI 해석 리포트 생성
+              </Button>
               <ResultCards result={job.result} />
-              <ChartCard title="Portfolio value" data={portfolioChart} kind="line" />
-              <ChartCard title="Monthly returns" data={monthlyChart} kind="bar" />
+              <ChartCard
+                title="Portfolio value"
+                data={portfolioChart}
+                kind="line"
+              />
+              <ChartCard
+                title="Monthly returns"
+                data={monthlyChart}
+                kind="bar"
+              />
               <TradeTable job={job} />
             </>
           ) : null}
@@ -264,10 +326,18 @@ export function BacktestWorkbench() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="space-y-1.5">
-      <span className="text-xs font-semibold uppercase text-slate-500">{label}</span>
+      <span className="text-xs font-semibold uppercase text-slate-500">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -319,7 +389,11 @@ function ConditionList({
   }
 
   function updateCondition(index: number, condition: StrategyCondition) {
-    onChange(conditions.map((item, itemIndex) => (itemIndex === index ? condition : item)));
+    onChange(
+      conditions.map((item, itemIndex) =>
+        itemIndex === index ? condition : item,
+      ),
+    );
   }
 
   function removeCondition(index: number) {
@@ -330,7 +404,12 @@ function ConditionList({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-950">{title}</h3>
-        <Button type="button" size="sm" variant="outline" onClick={addCondition}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={addCondition}
+        >
           <Plus className="size-4" />
           Add
         </Button>
@@ -367,13 +446,25 @@ function ConditionRow({
         <select
           className="h-10 min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-800"
           value={condition.type}
-          onChange={(event) => onChange(defaultCondition(event.target.value as CustomConditionType))}
+          onChange={(event) =>
+            onChange(
+              defaultCondition(event.target.value as CustomConditionType),
+            )
+          }
         >
           {options.map((option) => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option}>
+              {option}
+            </option>
           ))}
         </select>
-        <Button type="button" variant="ghost" size="icon" onClick={onRemove} aria-label="Remove condition">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          aria-label="Remove condition"
+        >
           <Trash2 className="size-4" />
         </Button>
       </div>
@@ -384,7 +475,12 @@ function ConditionRow({
             value={condition.period ?? ""}
             inputMode="numeric"
             placeholder="Period"
-            onChange={(event) => onChange({ ...condition, period: numberOrUndefined(event.target.value) })}
+            onChange={(event) =>
+              onChange({
+                ...condition,
+                period: numberOrUndefined(event.target.value),
+              })
+            }
           />
         ) : null}
         {VALUE_CONDITIONS.has(condition.type) ? (
@@ -393,7 +489,12 @@ function ConditionRow({
             value={condition.value ?? ""}
             inputMode="decimal"
             placeholder="Value"
-            onChange={(event) => onChange({ ...condition, value: numberOrUndefined(event.target.value) })}
+            onChange={(event) =>
+              onChange({
+                ...condition,
+                value: numberOrUndefined(event.target.value),
+              })
+            }
           />
         ) : null}
       </div>
@@ -401,7 +502,13 @@ function ConditionRow({
   );
 }
 
-function StatusCard({ job, loading }: { job: BacktestJob | null; loading: boolean }) {
+function StatusCard({
+  job,
+  loading,
+}: {
+  job: BacktestJob | null;
+  loading: boolean;
+}) {
   return (
     <Card className="rounded-lg">
       <CardContent className="flex items-center justify-between py-5">
@@ -410,17 +517,29 @@ function StatusCard({ job, loading }: { job: BacktestJob | null; loading: boolea
             <Activity className="size-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-slate-950">{job?.status ?? (loading ? "REQUESTING" : "READY")}</p>
-            <p className="text-sm text-slate-500">{job?.message ?? "No active job"}</p>
+            <p className="text-sm font-semibold text-slate-950">
+              {job?.status ?? (loading ? "REQUESTING" : "READY")}
+            </p>
+            <p className="text-sm text-slate-500">
+              {job?.message ?? "No active job"}
+            </p>
           </div>
         </div>
-        {job?.jobId ? <span className="text-xs font-mono text-slate-400">{job.jobId.slice(0, 8)}</span> : null}
+        {job?.jobId ? (
+          <span className="text-xs font-mono text-slate-400">
+            {job.jobId.slice(0, 8)}
+          </span>
+        ) : null}
       </CardContent>
     </Card>
   );
 }
 
-function ResultCards({ result }: { result: NonNullable<BacktestJob["result"]> }) {
+function ResultCards({
+  result,
+}: {
+  result: NonNullable<BacktestJob["result"]>;
+}) {
   const items = [
     ["Total return", result.totalReturnRate],
     ["CAGR", result.cagr],
@@ -435,7 +554,9 @@ function ResultCards({ result }: { result: NonNullable<BacktestJob["result"]> })
       {items.map(([label, value]) => (
         <Card key={label} className="rounded-lg">
           <CardContent className="p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+            <p className="text-xs font-semibold uppercase text-slate-500">
+              {label}
+            </p>
             <p className="mt-2 text-xl font-bold text-slate-950">
               {label === "Trades" ? value : `${Number(value).toFixed(2)}%`}
             </p>
@@ -464,18 +585,56 @@ function ChartCard({
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             {kind === "line" ? (
-              <LineChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-                <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
+              <LineChart
+                data={data}
+                margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke="#e2e8f0"
+                  strokeDasharray="4 4"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip />
-                <Line dataKey="value" dot={false} stroke="#2563eb" strokeWidth={2.5} type="monotone" />
+                <Line
+                  dataKey="value"
+                  dot={false}
+                  stroke="#2563eb"
+                  strokeWidth={2.5}
+                  type="monotone"
+                />
               </LineChart>
             ) : (
-              <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-                <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
+              <BarChart
+                data={data}
+                margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke="#e2e8f0"
+                  strokeDasharray="4 4"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip />
                 <Bar dataKey="value" fill="#0f766e" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -516,7 +675,9 @@ function TradeTable({ job }: { job: BacktestJob }) {
                   <td className="py-2 pr-3">{formatNumber(trade.price)}</td>
                   <td className="py-2 pr-3">{formatNumber(trade.quantity)}</td>
                   <td className="py-2 pr-3">{formatNumber(trade.cashAfter)}</td>
-                  <td className="py-2 pr-3">{formatNumber(trade.portfolioValueAfter)}</td>
+                  <td className="py-2 pr-3">
+                    {formatNumber(trade.portfolioValueAfter)}
+                  </td>
                   <td className="py-2">{trade.reason}</td>
                 </tr>
               ))}
@@ -555,5 +716,7 @@ function numberOrUndefined(value: string) {
 }
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(Number(value));
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(
+    Number(value),
+  );
 }

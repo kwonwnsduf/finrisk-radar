@@ -1,5 +1,6 @@
 package com.finrisk.radar.document.api;
 
+import com.finrisk.radar.asset.AssetRepository;
 import com.finrisk.radar.auth.jwt.CustomUserPrincipal;
 import com.finrisk.radar.document.*;
 import com.finrisk.radar.document.service.*;
@@ -18,14 +19,14 @@ public class DocumentAdminController {
   private final DocumentCollectionJobService jobs;
   private final DocumentAssetMappingRepository mappings;
   private final DocumentRepository documents;
-  private final com.finrisk.radar.asset.AssetRepository assets;
+  private final AssetRepository assets;
 
   public DocumentAdminController(
       DocumentCollectionRequestService requests,
       DocumentCollectionJobService jobs,
       DocumentAssetMappingRepository mappings,
       DocumentRepository documents,
-      com.finrisk.radar.asset.AssetRepository assets) {
+      AssetRepository assets) {
     this.requests = requests;
     this.jobs = jobs;
     this.mappings = mappings;
