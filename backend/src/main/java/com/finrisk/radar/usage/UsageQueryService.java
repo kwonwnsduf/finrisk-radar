@@ -33,7 +33,8 @@ public class UsageQueryService {
 				item(userId, plan, UsageType.BACKTEST),
 				item(userId, plan, UsageType.RISK_REPORT),
 				item(userId, plan, UsageType.AI_AGENT),
-				new UsageItemResponse(watchlistRepository.countByUser_Id(userId), UsagePolicy.watchlistLimit(plan))
+				new UsageItemResponse(watchlistRepository.countByUser_Id(userId), UsagePolicy.watchlistLimit(plan)),
+				item(userId, plan, UsageType.RAG_SEARCH)
 		);
 	}
 

@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   Radar,
   ShieldCheck,
+  CreditCard,
+  Crown,
   Search,
   Star,
 } from "lucide-react";
@@ -29,6 +31,8 @@ const navItems = [
   { href: "/rag", label: "RAG Search", icon: FileSearch },
   { href: "/ai", label: "AI Agent", icon: Bot },
   { href: "/reports", label: "AI Reports", icon: Files },
+  { href: "/pricing", label: "PREMIUM", icon: Crown },
+  { href: "/payments", label: "Payments", icon: CreditCard },
 ];
 
 export function Sidebar() {
@@ -42,6 +46,11 @@ export function Sidebar() {
           {
             href: "/admin/credit-event-candidates",
             label: "Event Review",
+            icon: ShieldCheck,
+          },
+          {
+            href: "/admin/fsd",
+            label: "FSD Review",
             icon: ShieldCheck,
           },
         ]

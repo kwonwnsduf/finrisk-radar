@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { SubscriptionUsageSection } from "@/components/subscription/subscription-usage-section";
 
 vi.mock("@/lib/api/subscriptions", () => ({
-  getMySubscription: vi.fn().mockResolvedValue({ plan: "FREE" }),
+  getMySubscription: vi.fn().mockResolvedValue({ currentPlan: "FREE" }),
 }));
 vi.mock("@/lib/api/usage", () => ({
   getMyUsage: vi.fn().mockResolvedValue({
@@ -14,6 +14,7 @@ vi.mock("@/lib/api/usage", () => ({
     riskReport: { used: 1, limit: 3 },
     aiAgent: { used: 0, limit: 3 },
     watchlist: { used: 4, limit: 5 },
+    ragSearch: { used: 0, limit: 3 },
   }),
 }));
 
@@ -30,6 +31,6 @@ describe("SubscriptionUsageSection", () => {
     expect(screen.getByText("백테스트")).toBeInTheDocument();
     expect(screen.getByText("2 / 5")).toBeInTheDocument();
     expect(screen.getByText("관심 자산")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "프리미엄 전환" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "PREMIUM 보기" })).toHaveAttribute("href", "/pricing");
   });
 });

@@ -13,6 +13,7 @@ export interface UsageResponse {
   riskReport: UsageItem;
   aiAgent: UsageItem;
   watchlist: UsageItem;
+  ragSearch: UsageItem;
 }
 
 export async function getMyUsage() {

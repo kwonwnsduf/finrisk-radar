@@ -102,4 +102,9 @@ public class User extends BaseTimeEntity {
 	public PlanType getPlan() {
 		return plan;
 	}
+
+	public void changePlan(PlanType plan) {
+		if (this.plan == PlanType.ADMIN) return;
+		this.plan = plan;
+	}
 }

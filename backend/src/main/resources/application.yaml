@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: native
+
 spring:
   application:
     name: backend
@@ -10,7 +13,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event,com.finrisk.radar.document.event,com.finrisk.radar.rag.event,com.finrisk.radar.report.event
+        spring.json.trusted.packages: com.finrisk.radar.collector.event,com.finrisk.radar.backtest.event,com.finrisk.radar.financial.event,com.finrisk.radar.risk.event,com.finrisk.radar.document.event,com.finrisk.radar.rag.event,com.finrisk.radar.report.event,com.finrisk.radar.payment.outbox
   security:
     oauth2:
       client:
@@ -33,6 +36,92 @@ jwt:
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:14d}
 
 app:
+  payment:
+    enabled: ${PAYMENT_ENABLED:false}
+    frontend-base-url: ${PAYMENT_FRONTEND_BASE_URL:http://localhost:3000}
+    subscription-expiry-delay: ${PAYMENT_SUBSCRIPTION_EXPIRY_DELAY:60s}
+    provider:
+      base-url: ${TOSS_API_BASE_URL:https://api.tosspayments.com}
+      connect-timeout: ${TOSS_CONNECT_TIMEOUT:3s}
+      read-timeout: ${TOSS_READ_TIMEOUT:10s}
+    lock:
+      ttl: ${PAYMENT_LOCK_TTL:30s}
+    recovery:
+      fixed-delay: ${PAYMENT_RECOVERY_DELAY:60s}
+      stale-after: ${PAYMENT_RECOVERY_STALE_AFTER:60s}
+    outbox:
+      fixed-delay: ${PAYMENT_OUTBOX_DELAY:1s}
+      batch-size: ${PAYMENT_OUTBOX_BATCH_SIZE:100}
+      max-attempts: ${PAYMENT_OUTBOX_MAX_ATTEMPTS:10}
+    fsd:
+      enabled: ${PAYMENT_FSD_ENABLED:true}
+      failure-burst:
+        window: ${PAYMENT_FSD_FAILURE_WINDOW:10m}
+        review-count: ${PAYMENT_FSD_FAILURE_REVIEW_COUNT:5}
+        block-count: ${PAYMENT_FSD_FAILURE_BLOCK_COUNT:10}
+        redis-ttl: ${PAYMENT_FSD_FAILURE_REDIS_TTL:10m}
+        control:
+          enabled: ${PAYMENT_FSD_FAILURE_ENABLED:true}
+          priority: ${PAYMENT_FSD_FAILURE_PRIORITY:10}
+          fail-mode: CLOSED
+      same-ip-accounts:
+        window: ${PAYMENT_FSD_IP_WINDOW:30m}
+        review-count: ${PAYMENT_FSD_IP_REVIEW_COUNT:3}
+        block-count: ${PAYMENT_FSD_IP_BLOCK_COUNT:5}
+        redis-ttl: ${PAYMENT_FSD_IP_REDIS_TTL:30m}
+        control:
+          enabled: ${PAYMENT_FSD_IP_ENABLED:true}
+          priority: ${PAYMENT_FSD_IP_PRIORITY:20}
+          fail-mode: CLOSED
+      rapid-order-creation:
+        window: ${PAYMENT_FSD_ORDER_WINDOW:5m}
+        max-orders: ${PAYMENT_FSD_ORDER_MAX:5}
+        redis-ttl: ${PAYMENT_FSD_ORDER_REDIS_TTL:5m}
+        control:
+          enabled: ${PAYMENT_FSD_ORDER_ENABLED:true}
+          priority: ${PAYMENT_FSD_ORDER_PRIORITY:30}
+          fail-mode: CLOSED
+      metadata:
+        require-request-id: ${PAYMENT_FSD_REQUIRE_REQUEST_ID:false}
+        require-user-agent: ${PAYMENT_FSD_REQUIRE_USER_AGENT:true}
+        missing-decision: ${PAYMENT_FSD_METADATA_DECISION:REVIEW}
+        missing-severity: ${PAYMENT_FSD_METADATA_SEVERITY:MEDIUM}
+        control:
+          enabled: ${PAYMENT_FSD_METADATA_ENABLED:true}
+          priority: ${PAYMENT_FSD_METADATA_PRIORITY:40}
+          fail-mode: CLOSED
+      failure-switch-account:
+        failure-window: ${PAYMENT_FSD_SWITCH_FAILURE_WINDOW:10m}
+        success-window: ${PAYMENT_FSD_SWITCH_SUCCESS_WINDOW:30m}
+        minimum-failures: ${PAYMENT_FSD_SWITCH_MIN_FAILURES:5}
+        control:
+          enabled: ${PAYMENT_FSD_SWITCH_ENABLED:true}
+          priority: ${PAYMENT_FSD_SWITCH_PRIORITY:50}
+          fail-mode: OPEN
+      immediate-cancel:
+        immediate-window: ${PAYMENT_FSD_IMMEDIATE_CANCEL_WINDOW:24h}
+        lookback-window: ${PAYMENT_FSD_IMMEDIATE_CANCEL_LOOKBACK:30d}
+        review-count: ${PAYMENT_FSD_IMMEDIATE_CANCEL_COUNT:3}
+        control:
+          enabled: ${PAYMENT_FSD_IMMEDIATE_CANCEL_ENABLED:true}
+          priority: ${PAYMENT_FSD_IMMEDIATE_CANCEL_PRIORITY:60}
+          fail-mode: OPEN
+      cancellation-ratio:
+        lookback-window: ${PAYMENT_FSD_CANCEL_RATIO_LOOKBACK:30d}
+        minimum-payments: ${PAYMENT_FSD_CANCEL_RATIO_MIN_PAYMENTS:4}
+        review-ratio: ${PAYMENT_FSD_CANCEL_RATIO:0.5}
+        control:
+          enabled: ${PAYMENT_FSD_CANCEL_RATIO_ENABLED:true}
+          priority: ${PAYMENT_FSD_CANCEL_RATIO_PRIORITY:70}
+          fail-mode: OPEN
+      repeated-order-pattern:
+        window: ${PAYMENT_FSD_REPEATED_ORDER_WINDOW:24h}
+        minimum-orders: ${PAYMENT_FSD_REPEATED_ORDER_MIN:5}
+        maximum-paid-ratio: ${PAYMENT_FSD_REPEATED_ORDER_PAID_RATIO:0.4}
+        control:
+          enabled: ${PAYMENT_FSD_REPEATED_ORDER_ENABLED:true}
+          priority: ${PAYMENT_FSD_REPEATED_ORDER_PRIORITY:80}
+          fail-mode: OPEN
   seed-risk-scenarios:
     enabled: ${SEED_RISK_SCENARIOS_ENABLED:false}
   seed-reit-risk-scenarios:

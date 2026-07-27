@@ -28,6 +28,10 @@ import com.finrisk.radar.risk.RiskScoreRepository;
 import com.finrisk.radar.risk.RiskSignalRepository;
 import com.finrisk.radar.user.UserRepository;
 import com.finrisk.radar.watchlist.WatchlistRepository;
+import com.finrisk.radar.payment.*;
+import com.finrisk.radar.payment.outbox.*;
+import com.finrisk.radar.subscription.*;
+import com.finrisk.radar.fsd.FsdRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
@@ -94,6 +98,15 @@ class BackendApplicationTests {
   @MockitoBean private DocumentChunkRepository documentChunkRepository;
   @MockitoBean private RagVectorSearchRepository ragVectorSearchRepository;
   @MockitoBean private AiReportRepository aiReportRepository;
+  @MockitoBean private PaymentOrderRepository paymentOrderRepository;
+  @MockitoBean private PaymentTransactionRepository paymentTransactionRepository;
+  @MockitoBean private PaymentCancellationRepository paymentCancellationRepository;
+  @MockitoBean private PaymentAttemptRepository paymentAttemptRepository;
+  @MockitoBean private SubscriptionRepository subscriptionRepository;
+  @MockitoBean private SubscriptionEntitlementRepository subscriptionEntitlementRepository;
+  @MockitoBean private FsdRepository fsdRepository;
+  @MockitoBean private OutboxRepository outboxRepository;
+  @MockitoBean private ConsumedEventRepository consumedEventRepository;
 
   @Autowired private MockMvc mockMvc;
 

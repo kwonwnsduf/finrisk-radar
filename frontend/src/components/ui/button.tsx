@@ -14,6 +14,7 @@ const buttonVariants = cva(
           "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
         kakao: "bg-[#FEE500] text-[#191919] hover:bg-[#f4dc00]",
         ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+        destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
         default: "h-11 px-5",

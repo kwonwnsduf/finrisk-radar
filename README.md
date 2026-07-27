@@ -1,5 +1,10 @@
 # FinRisk Radar
 
+[Day 14 백엔드 중심 코드 흐름 가이드](docs/day14-code-flow-guide.md)
+
+결제·구독·FSD 구현과 운영 설정은
+[Day 14 결제·구독·FSD 문서](docs/day14-payments-subscriptions-fsd.md)를 참고하세요.
+
 FinRisk Radar는 금융 리스크 분석 서비스를 위한 모노레포 프로젝트입니다.
 
 ## 기능별 문서

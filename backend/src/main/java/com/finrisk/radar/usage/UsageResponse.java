@@ -5,5 +5,6 @@ public record UsageResponse(
 		UsageItemResponse backtest,
 		UsageItemResponse riskReport,
 		UsageItemResponse aiAgent,
-		UsageItemResponse watchlist
+		UsageItemResponse watchlist,
+		UsageItemResponse ragSearch
 ) {}

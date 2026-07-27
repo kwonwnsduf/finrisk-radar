@@ -142,7 +142,45 @@ public enum ErrorCode {
       "BACKTEST_006",
       "Natural-language backtest request could not be parsed."),
   BACKTEST_CONDITION_INVALID(
-      HttpStatus.BAD_REQUEST, "BACKTEST_007", "Backtest strategy conditions are invalid.");
+      HttpStatus.BAD_REQUEST, "BACKTEST_007", "Backtest strategy conditions are invalid."),
+  PAYMENT_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_001", "Payment order was not found."),
+  PAYMENT_ORDER_FORBIDDEN(
+      HttpStatus.FORBIDDEN, "PAYMENT_002", "You cannot access this payment order."),
+  PAYMENT_AMOUNT_MISMATCH(
+      HttpStatus.BAD_REQUEST, "PAYMENT_003", "Payment amount does not match the order."),
+  PAYMENT_ALREADY_CONFIRMED(HttpStatus.CONFLICT, "PAYMENT_004", "Payment is already confirmed."),
+  PAYMENT_ALREADY_CANCELED(HttpStatus.CONFLICT, "PAYMENT_005", "Payment is already canceled."),
+  PAYMENT_INVALID_STATUS(
+      HttpStatus.CONFLICT, "PAYMENT_006", "Payment order status does not allow this operation."),
+  PAYMENT_DUPLICATE_KEY(HttpStatus.CONFLICT, "PAYMENT_007", "Payment key is already used."),
+  PAYMENT_CONFIRM_IN_PROGRESS(
+      HttpStatus.CONFLICT, "PAYMENT_008", "Payment confirmation is in progress."),
+  PAYMENT_CANCEL_IN_PROGRESS(
+      HttpStatus.CONFLICT, "PAYMENT_009", "Payment cancellation is in progress."),
+  PAYMENT_PROVIDER_ERROR(
+      HttpStatus.BAD_GATEWAY, "PAYMENT_010", "Payment provider rejected the request."),
+  PAYMENT_PROVIDER_TIMEOUT(
+      HttpStatus.GATEWAY_TIMEOUT, "PAYMENT_011", "Payment provider response is uncertain."),
+  PAYMENT_RECOVERY_REQUIRED(
+      HttpStatus.ACCEPTED, "PAYMENT_012", "Payment state is being reconciled."),
+  PAYMENT_FSD_BLOCKED(
+      HttpStatus.FORBIDDEN, "PAYMENT_013", "Payment was blocked by fraud screening."),
+  PAYMENT_IDEMPOTENCY_CONFLICT(
+      HttpStatus.CONFLICT, "PAYMENT_014", "Idempotency key was used for another request."),
+  PAYMENT_NOT_CONFIGURED(
+      HttpStatus.SERVICE_UNAVAILABLE, "PAYMENT_015", "Payment feature is not configured."),
+  PAYMENT_ORDER_RATE_LIMITED(
+      HttpStatus.TOO_MANY_REQUESTS, "PAYMENT_016", "Too many payment orders were created."),
+  PAYMENT_CANCEL_NOT_ELIGIBLE(
+      HttpStatus.CONFLICT,
+      "PAYMENT_017",
+      "This payment has no unused subscription period to cancel."),
+  PAYMENT_ORDER_IN_PROGRESS(
+      HttpStatus.CONFLICT, "PAYMENT_018", "Payment order creation is in progress."),
+  SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUBSCRIPTION_001", "Subscription was not found."),
+  FSD_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "FSD_001", "FSD event was not found."),
+  FSD_INVALID_STATUS_TRANSITION(
+      HttpStatus.CONFLICT, "FSD_002", "FSD event status transition is invalid.");
 
   private final HttpStatus httpStatus;
   private final String code;
