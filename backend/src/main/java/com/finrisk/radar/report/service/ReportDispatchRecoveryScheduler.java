@@ -30,12 +30,14 @@ public class ReportDispatchRecoveryScheduler {
   public void recover() {
     for (AiReport report :
         reports.findTop50ByStatusAndRequestedAtBeforeOrderByRequestedAtAsc(
-            ReportStatus.REQUESTED, LocalDateTime.now().minusMinutes(1))) {
+            ReportStatus.REQUESTED,
+            LocalDateTime.now().minus(ReportRecoveryPolicy.REQUESTED_STALE_AFTER))) {
       publish(report, true);
     }
     for (AiReport report :
         reports.findTop50ByStatusAndStartedAtBeforeOrderByStartedAtAsc(
-            ReportStatus.RUNNING, LocalDateTime.now().minusMinutes(5))) {
+            ReportStatus.RUNNING,
+            LocalDateTime.now().minus(ReportRecoveryPolicy.RUNNING_STALE_AFTER))) {
       publish(report, false);
     }
   }

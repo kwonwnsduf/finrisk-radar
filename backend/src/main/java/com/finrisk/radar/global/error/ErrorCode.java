@@ -180,7 +180,11 @@ public enum ErrorCode {
   SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "SUBSCRIPTION_001", "Subscription was not found."),
   FSD_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "FSD_001", "FSD event was not found."),
   FSD_INVALID_STATUS_TRANSITION(
-      HttpStatus.CONFLICT, "FSD_002", "FSD event status transition is invalid.");
+      HttpStatus.CONFLICT, "FSD_002", "FSD event status transition is invalid."),
+  CREDIT_EVENT_CANDIDATE_NOT_FOUND(
+      HttpStatus.NOT_FOUND, "DOCUMENT_001", "Credit event candidate was not found."),
+  CREDIT_EVENT_CANDIDATE_ALREADY_REVIEWED(
+      HttpStatus.CONFLICT, "DOCUMENT_002", "Credit event candidate is already reviewed.");
 
   private final HttpStatus httpStatus;
   private final String code;

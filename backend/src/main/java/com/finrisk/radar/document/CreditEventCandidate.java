@@ -210,4 +210,16 @@ public class CreditEventCandidate extends BaseTimeEntity {
   public String getRecalculationLastError() {
     return recalculationLastError;
   }
+
+  public Long getRepresentativeMatchId() {
+    return representativeMatchId;
+  }
+
+  public LocalDateTime getReviewedAt() {
+    return reviewedAt;
+  }
+
+  public String getReviewNote() {
+    return reviewNote;
+  }
 }

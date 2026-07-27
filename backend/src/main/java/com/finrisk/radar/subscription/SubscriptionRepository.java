@@ -6,8 +6,15 @@ import java.util.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
-public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+public interface SubscriptionRepository
+    extends JpaRepository<Subscription, Long>, JpaSpecificationExecutor<Subscription> {
   Optional<Subscription> findByUserId(Long userId);
+
+  List<Subscription> findByUserIdIn(Collection<Long> userIds);
+
+  long countByStatusAndCurrentPeriodEndAfter(SubscriptionStatus status, LocalDateTime now);
+
+  long countByCreatedAtAfter(LocalDateTime after);
 
   List<Subscription> findTop100ByStatusAndCurrentPeriodEndBeforeOrderByCurrentPeriodEndAsc(
       SubscriptionStatus status, LocalDateTime now);

@@ -5,6 +5,7 @@ import com.finrisk.radar.risk.*;
 import com.finrisk.radar.risk.api.CreditEventCreateRequest;
 import com.finrisk.radar.risk.service.RiskAdminService;
 import java.util.List;
+import com.finrisk.radar.global.error.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ public class CreditEventReviewService {
   public CreditEventCandidate approve(Long id, Long reviewer, String note) {
     CreditEventCandidate c = find(id);
     if (c.getStatus() != CreditEventCandidateStatus.PENDING_REVIEW)
-      throw new IllegalStateException("Candidate is already reviewed.");
+      throw new BusinessException(ErrorCode.CREDIT_EVENT_CANDIDATE_ALREADY_REVIEWED);
     List<DocumentRiskMatch> evidence = matches.findByCandidateIdOrderByConfidenceDesc(id);
     String description =
         evidence.isEmpty()
@@ -62,14 +63,14 @@ public class CreditEventReviewService {
   public CreditEventCandidate reject(Long id, Long reviewer, String note) {
     CreditEventCandidate c = find(id);
     if (c.getStatus() != CreditEventCandidateStatus.PENDING_REVIEW)
-      throw new IllegalStateException("Candidate is already reviewed.");
+      throw new BusinessException(ErrorCode.CREDIT_EVENT_CANDIDATE_ALREADY_REVIEWED);
     c.reject(reviewer, note);
     return c;
   }
 
   private CreditEventCandidate find(Long id) {
     return candidates
-        .findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Credit event candidate not found."));
+        .findByIdForUpdate(id)
+        .orElseThrow(() -> new BusinessException(ErrorCode.CREDIT_EVENT_CANDIDATE_NOT_FOUND));
   }
 }

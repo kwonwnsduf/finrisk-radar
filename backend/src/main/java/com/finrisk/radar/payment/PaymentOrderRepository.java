@@ -7,10 +7,24 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
-public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, Long> {
+public interface PaymentOrderRepository
+    extends JpaRepository<PaymentOrder, Long>, JpaSpecificationExecutor<PaymentOrder> {
   Optional<PaymentOrder> findByOrderId(String orderId);
 
   Page<PaymentOrder> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+  List<PaymentOrder> findByIdIn(Collection<Long> ids);
+
+  @Query("""
+      select o from PaymentOrder o
+      where o.userId in :userIds
+        and o.createdAt = (
+          select max(o2.createdAt) from PaymentOrder o2 where o2.userId = o.userId
+        )
+      """)
+  List<PaymentOrder> findLatestByUserIds(@Param("userIds") Collection<Long> userIds);
+
+  long countByStatus(PaymentOrderStatus status);
 
   long countByUserIdAndStatusAndCreatedAtAfter(
       Long userId, PaymentOrderStatus status, LocalDateTime after);

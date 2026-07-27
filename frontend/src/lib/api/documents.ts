@@ -38,23 +38,29 @@ export interface DocumentRiskMatch {
 export interface CreditEventCandidate {
   id: number;
   assetId: number;
+  assetName: string;
+  ticker: string;
   eventType: string;
   eventDate: string;
   severity: string;
   confidence: number;
+  documentTitle: string | null;
+  documentSource: string | null;
   status: "PENDING_REVIEW" | "APPROVED" | "REJECTED";
-  approvedCreditEventId: number | null;
-  recalculationStatus:
-    | "NOT_REQUESTED"
-    | "REQUESTED"
-    | "DEFERRED"
-    | "COMPLETED"
-    | "FAILED";
-  recalculationJobId: string | null;
-  recalculationAttemptCount: number;
-  recalculationLastAttemptedAt: string | null;
-  recalculationLastError: string | null;
-  matches: DocumentRiskMatch[];
+  createdAt: string;
+}
+export interface CreditEventCandidateDetail {
+  id: number; assetId: number; assetName: string; ticker: string; eventType: string;
+  eventDate: string; severity: string; confidence: number;
+  status: "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+  reviewedBy: number | null; reviewedAt: string | null; reviewNote: string | null; createdAt: string;
+  matches: Array<{
+    id: number; documentId: number; documentTitle: string | null; sourceType: string | null;
+    sourceName: string | null; sourceUrl: string | null; sentenceText: string; matchedText: string;
+    assertionType: AssertionType; confidence: number; extractedAmount: number | null;
+    extractedCurrency: string | null; evidence: string;
+  }>;
+  nearbyCandidates: Array<{ id: number; eventDate: string; severity: string; confidence: number; status: string }>;
 }
 export interface DocumentCollectionJob {
   jobId: string;
@@ -83,15 +89,15 @@ export async function getDocumentMatches(documentId: number) {
   );
   return response.data.data;
 }
-export async function getCandidates(status = "PENDING_REVIEW") {
-  const response = await apiClient.get<ApiResponse<CreditEventCandidate[]>>(
+export async function getCandidates(status = "PENDING_REVIEW", page = 0) {
+  const response = await apiClient.get<ApiResponse<{ items: CreditEventCandidate[]; page: number; size: number; totalElements: number; totalPages: number }>>(
     "/api/admin/credit-event-candidates",
-    { params: { status } },
+    { params: { status, page, size: 20 } },
   );
   return response.data.data;
 }
 export async function getCandidate(id: number) {
-  const response = await apiClient.get<ApiResponse<CreditEventCandidate>>(
+  const response = await apiClient.get<ApiResponse<CreditEventCandidateDetail>>(
     `/api/admin/credit-event-candidates/${id}`,
   );
   return response.data.data;
@@ -101,14 +107,14 @@ export async function reviewCandidate(
   action: "approve" | "reject",
   reviewNote = "",
 ) {
-  const response = await apiClient.post<ApiResponse<CreditEventCandidate>>(
+  const response = await apiClient.post<ApiResponse<unknown>>(
     `/api/admin/credit-event-candidates/${id}/${action}`,
     { reviewNote },
   );
   return response.data.data;
 }
 export async function retryCandidateRecalculation(id: number) {
-  const response = await apiClient.post<ApiResponse<CreditEventCandidate>>(
+  const response = await apiClient.post<ApiResponse<unknown>>(
     `/api/admin/credit-event-candidates/${id}/recalculate`,
   );
   return response.data.data;

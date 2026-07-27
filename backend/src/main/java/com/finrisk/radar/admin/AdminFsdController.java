@@ -7,6 +7,7 @@ import com.finrisk.radar.payment.PaymentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import com.finrisk.radar.payment.PaymentOrderStatus;
 import java.util.List;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,12 +63,15 @@ record ReviewFsdRequest(FsdStatus status, @Size(max = 1000) String reviewNote) {
 
 record ReconcileResponse(String orderId, String result) {}
 
-record AdminPage<T>(List<T> items, int page, int size, long totalElements, int totalPages) {}
-
 record FsdEventResponse(
     Long id,
     String orderId,
     Long userId,
+    String userEmail,
+    String userName,
+    Long amount,
+    String currency,
+    PaymentOrderStatus paymentStatus,
     String ruleCode,
     FsdPhase phase,
     FsdDecision decision,
@@ -79,12 +83,26 @@ record FsdEventResponse(
     LocalDateTime detectedAt,
     LocalDateTime reviewedAt,
     Long reviewedBy,
-    String reviewNote) {
-  static FsdEventResponse from(FsdEvent value, String orderId) {
+    String reviewNote,
+    List<AdminPaymentAttempt> attempts) {
+  static FsdEventResponse from(
+      FsdEvent value,
+      String orderId,
+      String userEmail,
+      String userName,
+      Long amount,
+      String currency,
+      PaymentOrderStatus paymentStatus,
+      List<AdminPaymentAttempt> attempts) {
     return new FsdEventResponse(
         value.getId(),
         orderId,
         value.getUserId(),
+        userEmail,
+        userName,
+        amount,
+        currency,
+        paymentStatus,
         value.getRuleCode(),
         value.getPhase(),
         value.getDecision(),
@@ -96,6 +114,7 @@ record FsdEventResponse(
         value.getDetectedAt(),
         value.getReviewedAt(),
         value.getReviewedBy(),
-        value.getReviewNote());
+        value.getReviewNote(),
+        attempts);
   }
 }

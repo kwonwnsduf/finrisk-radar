@@ -44,13 +44,8 @@ export function Sidebar() {
       ? [
           ...navItems,
           {
-            href: "/admin/credit-event-candidates",
-            label: "Event Review",
-            icon: ShieldCheck,
-          },
-          {
-            href: "/admin/fsd",
-            label: "FSD Review",
+            href: "/admin",
+            label: "운영 콘솔",
             icon: ShieldCheck,
           },
         ]

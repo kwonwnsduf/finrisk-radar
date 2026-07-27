@@ -151,4 +151,8 @@ public class PaymentOrder extends BaseTimeEntity {
   public LocalDateTime getCanceledAt() {
     return canceledAt;
   }
+
+  public LocalDateTime getFailedAt() {
+    return failedAt;
+  }
 }

@@ -96,12 +96,36 @@ public class PaymentAttempt {
     return id;
   }
 
+  public Long getPaymentOrderId() {
+    return paymentOrderId;
+  }
+
+  public String getAttemptType() {
+    return attemptType;
+  }
+
   public String getRequestFingerprint() {
     return requestFingerprint;
   }
 
   public String getResult() {
     return result;
+  }
+
+  public String getErrorCode() {
+    return errorCode;
+  }
+
+  public String getErrorMessage() {
+    return errorMessage;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public LocalDateTime getCompletedAt() {
+    return completedAt;
   }
 
   public Map<String, Object> getResponsePayload() {

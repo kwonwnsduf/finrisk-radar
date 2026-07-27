@@ -17,6 +17,16 @@ public interface AiReportRepository
 
   long countByUserIdAndStatusIn(Long userId, Collection<ReportStatus> statuses);
 
+  long countByStatusIn(Collection<ReportStatus> statuses);
+
+  long countByStatusAndFailedAtAfter(ReportStatus status, LocalDateTime after);
+
+  long countByStatusAndRequestedAtBefore(ReportStatus status, LocalDateTime before);
+
+  long countByStatusAndStartedAtBefore(ReportStatus status, LocalDateTime before);
+
+  Page<AiReport> findByStatusOrderByFailedAtDesc(ReportStatus status, Pageable pageable);
+
   Page<AiReport> findByUserIdOrderByRequestedAtDesc(Long userId, Pageable pageable);
 
   Page<AiReport> findByUserIdAndReportTypeOrderByRequestedAtDesc(

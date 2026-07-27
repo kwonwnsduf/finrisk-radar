@@ -3,6 +3,8 @@ package com.finrisk.radar.admin;
 import com.finrisk.radar.fsd.*;
 import com.finrisk.radar.global.error.*;
 import com.finrisk.radar.payment.PaymentOrderRepository;
+import com.finrisk.radar.payment.*;
+import com.finrisk.radar.user.*;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -15,10 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 class AdminFsdService {
   private final FsdRepository events;
   private final PaymentOrderRepository orders;
+  private final PaymentAttemptRepository attempts;
+  private final UserRepository users;
 
-  AdminFsdService(FsdRepository events, PaymentOrderRepository orders) {
+  AdminFsdService(
+      FsdRepository events,
+      PaymentOrderRepository orders,
+      PaymentAttemptRepository attempts,
+      UserRepository users) {
     this.events = events;
     this.orders = orders;
+    this.attempts = attempts;
+    this.users = users;
   }
 
   @Transactional(readOnly = true)
@@ -66,29 +76,27 @@ class AdminFsdService {
                 Math.max(0, page),
                 Math.min(Math.max(1, size), 100),
                 Sort.by(Sort.Direction.DESC, "detectedAt")));
-    return new AdminPage<>(
-        result.getContent().stream().map(this::response).toList(),
-        result.getNumber(),
-        result.getSize(),
-        result.getTotalElements(),
-        result.getTotalPages());
+    return AdminPage.from(result, responses(result.getContent(), false));
   }
 
   @Transactional(readOnly = true)
   FsdEventResponse get(Long id) {
-    return response(require(id));
+    return responses(List.of(require(id)), true).get(0);
   }
 
   @Transactional
   FsdEventResponse review(Long id, FsdStatus status, String note, Long adminId) {
     if (status == null) throw new BusinessException(ErrorCode.INVALID_INPUT);
-    FsdEvent event = require(id);
+    FsdEvent event =
+        events
+            .findByIdForUpdate(id)
+            .orElseThrow(() -> new BusinessException(ErrorCode.FSD_EVENT_NOT_FOUND));
     try {
       event.review(status, note, adminId);
     } catch (IllegalStateException exception) {
       throw new BusinessException(ErrorCode.FSD_INVALID_STATUS_TRANSITION);
     }
-    return response(event);
+    return responses(List.of(event), true).get(0);
   }
 
   private FsdEvent require(Long id) {
@@ -97,14 +105,53 @@ class AdminFsdService {
         .orElseThrow(() -> new BusinessException(ErrorCode.FSD_EVENT_NOT_FOUND));
   }
 
-  private FsdEventResponse response(FsdEvent event) {
-    String orderId =
-        event.getPaymentOrderId() == null
-            ? null
-            : orders
-                .findById(event.getPaymentOrderId())
-                .map(order -> order.getOrderId())
-                .orElse(event.getPaymentOrderId().toString());
-    return FsdEventResponse.from(event, orderId);
+  private List<FsdEventResponse> responses(List<FsdEvent> values, boolean includeAttempts) {
+    Map<Long, PaymentOrder> orderById =
+        orders
+            .findByIdIn(
+                values.stream()
+                    .map(FsdEvent::getPaymentOrderId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList())
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(PaymentOrder::getId, v -> v));
+    Map<Long, User> userById =
+        users.findAllById(values.stream().map(FsdEvent::getUserId).distinct().toList()).stream()
+            .collect(java.util.stream.Collectors.toMap(User::getId, v -> v));
+    Map<Long, List<AdminPaymentAttempt>> attemptsByOrder = new HashMap<>();
+    if (includeAttempts) {
+      for (PaymentAttempt attempt :
+          attempts.findByPaymentOrderIdInOrderByCreatedAtDesc(orderById.keySet())) {
+        attemptsByOrder
+            .computeIfAbsent(attempt.getPaymentOrderId(), ignored -> new ArrayList<>())
+            .add(
+                new AdminPaymentAttempt(
+                    attempt.getAttemptType(),
+                    attempt.getResult(),
+                    attempt.getErrorCode(),
+                    attempt.getErrorMessage(),
+                    attempt.getCreatedAt(),
+                    attempt.getCompletedAt()));
+      }
+    }
+    return values.stream()
+        .map(
+            event -> {
+              PaymentOrder order = orderById.get(event.getPaymentOrderId());
+              User user = userById.get(event.getUserId());
+              return FsdEventResponse.from(
+                  event,
+                  order == null ? null : order.getOrderId(),
+                  user == null ? null : user.getEmail(),
+                  user == null ? null : user.getName(),
+                  order == null ? null : order.getAmount(),
+                  order == null ? null : order.getCurrency(),
+                  order == null ? null : order.getStatus(),
+                  order == null
+                      ? List.of()
+                      : attemptsByOrder.getOrDefault(order.getId(), List.of()));
+            })
+        .toList();
   }
 }

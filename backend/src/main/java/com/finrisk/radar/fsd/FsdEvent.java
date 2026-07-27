@@ -84,7 +84,14 @@ public class FsdEvent {
   }
 
   public void review(FsdStatus next, String note, Long adminId) {
-    if (status == FsdStatus.RESOLVED || status == FsdStatus.FALSE_POSITIVE) {
+    boolean allowed =
+        (status == FsdStatus.OPEN
+                && (next == FsdStatus.REVIEWING
+                    || next == FsdStatus.RESOLVED
+                    || next == FsdStatus.FALSE_POSITIVE))
+            || (status == FsdStatus.REVIEWING
+                && (next == FsdStatus.RESOLVED || next == FsdStatus.FALSE_POSITIVE));
+    if (!allowed) {
       throw new IllegalStateException("Resolved FSD event cannot transition.");
     }
     status = next;
@@ -99,6 +106,10 @@ public class FsdEvent {
 
   public Long getPaymentOrderId() {
     return paymentOrderId;
+  }
+
+  public Long getPaymentAttemptId() {
+    return paymentAttemptId;
   }
 
   public Long getUserId() {

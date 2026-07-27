@@ -78,6 +78,10 @@ public class PaymentTransaction extends BaseTimeEntity {
     return method;
   }
 
+  public long getTotalAmount() {
+    return totalAmount;
+  }
+
   public LocalDateTime getApprovedAt() {
     return approvedAt;
   }

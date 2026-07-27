@@ -96,9 +96,3 @@ public class Subscription extends BaseTimeEntity {
     return activatedByPaymentOrderId;
   }
 }
-
-enum SubscriptionStatus {
-  ACTIVE,
-  CANCELED,
-  EXPIRED
-}

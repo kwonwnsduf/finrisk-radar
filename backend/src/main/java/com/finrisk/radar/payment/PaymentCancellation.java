@@ -70,4 +70,28 @@ public class PaymentCancellation {
   public Long getPaymentOrderId() {
     return paymentOrderId;
   }
+
+  public String getCancelReason() {
+    return cancelReason;
+  }
+
+  public long getAmount() {
+    return amount;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public LocalDateTime getRequestedAt() {
+    return requestedAt;
+  }
+
+  public LocalDateTime getCompletedAt() {
+    return completedAt;
+  }
+
+  public LocalDateTime getFailedAt() {
+    return failedAt;
+  }
 }

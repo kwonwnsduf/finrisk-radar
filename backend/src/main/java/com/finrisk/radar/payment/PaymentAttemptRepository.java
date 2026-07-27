@@ -19,6 +19,12 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, 
 
   Optional<PaymentAttempt> findTopByPaymentOrderIdOrderByCreatedAtDesc(Long paymentOrderId);
 
+  List<PaymentAttempt> findByPaymentOrderIdOrderByCreatedAtDesc(Long paymentOrderId);
+
+  List<PaymentAttempt> findByPaymentOrderIdInOrderByCreatedAtDesc(Collection<Long> orderIds);
+
+  long countByResultAndCompletedAtAfter(String result, LocalDateTime after);
+
   @Query(
       "select count(a.id) from PaymentAttempt a "
           + "where a.clientIp = :clientIp and a.userId <> :userId "

@@ -1,7 +1,4 @@
-import { AdminGuard } from "@/components/auth/admin-guard";
 import { FsdConsole } from "@/components/admin/fsd-console";
-import { AppShell } from "@/components/layout/app-shell";
-
 export default function AdminFsdPage() {
-  return <AppShell><AdminGuard><div><h1 className="mb-6 text-2xl font-bold">FSD 이상 결제 검토</h1><FsdConsole /></div></AdminGuard></AppShell>;
+  return <div><h1 className="mb-2 text-2xl font-bold">이상 결제 검토</h1><p className="mb-6 text-sm text-slate-500">FSD 탐지 근거와 결제 시도를 확인하고 상태를 처리합니다.</p><FsdConsole /></div>;
 }
