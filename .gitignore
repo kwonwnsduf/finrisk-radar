@@ -1,7 +1,8 @@
 # Environment variables
 .env
 .env.*
-!.env.local.example
+!.env.example
+!.env.*.example
 
 # IDE and editor
 .idea/
@@ -32,8 +33,17 @@ dist/
 coverage/
 *.tsbuildinfo
 
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.tfplan
+crash.log
+crash.*.log
+
 # Temporary files
 tmp/
 temp/
 *.tmp
-

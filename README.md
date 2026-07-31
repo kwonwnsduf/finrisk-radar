@@ -1,5 +1,7 @@
 # FinRisk Radar
 
+[Day 17 Docker, Nginx, AWS ECR](docs/day17-docker-nginx-ecr.md)
+
 [Day 16 인앱 알림 시스템](docs/day16-in-app-notifications.md)
 
 [Day 14 백엔드 중심 코드 흐름 가이드](docs/day14-code-flow-guide.md)
