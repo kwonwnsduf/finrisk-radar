@@ -51,13 +51,20 @@ function Test-EcrTagExists {
         [string]$Tag
     )
 
-    & aws @awsGlobalArgs ecr describe-images `
-        --region $Region `
-        --repository-name $RepositoryName `
-        --image-ids "imageTag=$Tag" `
-        --query "imageDetails[0].imageDigest" `
-        --output text 1>$null 2>$null
-    return $LASTEXITCODE -eq 0
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & aws @awsGlobalArgs ecr describe-images `
+            --region $Region `
+            --repository-name $RepositoryName `
+            --image-ids "imageTag=$Tag" `
+            --query "imageDetails[0].imageDigest" `
+            --output text 1>$null 2>$null
+        return $LASTEXITCODE -eq 0
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
 }
 
 function Push-ImmutableTag {
