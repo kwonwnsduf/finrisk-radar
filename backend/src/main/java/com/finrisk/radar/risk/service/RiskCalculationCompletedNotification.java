@@ -4,4 +4,4 @@ import com.finrisk.radar.risk.*;
 import java.util.*;
 
 public record RiskCalculationCompletedNotification(
-    UUID jobId, Long assetId, RiskScore score, List<RiskSignal> signals) {}
+    UUID jobId, Long userId, Long assetId, RiskScore score, List<RiskSignal> signals) {}

@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 
 import java.util.Optional;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
@@ -21,6 +22,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 	long countByPlan(com.finrisk.radar.subscription.PlanType plan);
 
 	long countByCreatedAtAfter(java.time.LocalDateTime after);
+
+	@Query("select user.id from User user where user.role = :role")
+	List<Long> findIdsByRole(@Param("role") Role role);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select user from User user where user.id = :id")

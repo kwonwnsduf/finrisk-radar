@@ -10,4 +10,10 @@ public class BacktestKafkaConfiguration {
 	@Bean NewTopic backtestRequestedTopic() {
 		return TopicBuilder.name(BacktestTopics.REQUESTED).partitions(1).replicas(1).build();
 	}
+	@Bean NewTopic backtestCompletedTopic() {
+		return TopicBuilder.name(BacktestTopics.COMPLETED).partitions(1).replicas(1).build();
+	}
+	@Bean NewTopic backtestFailedTopic() {
+		return TopicBuilder.name(BacktestTopics.FAILED).partitions(1).replicas(1).build();
+	}
 }

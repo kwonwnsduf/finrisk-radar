@@ -7,7 +7,9 @@ import com.finrisk.radar.global.error.BusinessException;
 import com.finrisk.radar.global.error.ErrorCode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +19,17 @@ public class BacktestJobService {
   private final BacktestJobRepository jobs;
   private final BacktestResultRepository results;
   private final ObjectMapper objectMapper;
+  private final ApplicationEventPublisher events;
 
   public BacktestJobService(
-      BacktestJobRepository jobs, BacktestResultRepository results, ObjectMapper objectMapper) {
+      BacktestJobRepository jobs,
+      BacktestResultRepository results,
+      ObjectMapper objectMapper,
+      ApplicationEventPublisher events) {
     this.jobs = jobs;
     this.results = results;
     this.objectMapper = objectMapper;
+    this.events = events;
   }
 
   @Transactional
@@ -82,12 +89,29 @@ public class BacktestJobService {
             toJson(calculation.dailyPortfolioValues()),
             toJson(calculation.trades())));
     job.complete();
+    events.publishEvent(
+        new com.finrisk.radar.backtest.service.BacktestFinishedNotification(
+            job.getJobId(),
+            job.getRequestedByUserId(),
+            job.getAssetId(),
+            job.getStatus(),
+            Instant.now()));
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void markFailed(UUID jobId, String message) {
     String safe = message == null || message.isBlank() ? "Backtest failed." : message;
-    find(jobId).fail(safe.substring(0, Math.min(safe.length(), 1000)));
+    BacktestJob job = find(jobId);
+    if (job.getStatus() == BacktestStatus.COMPLETED || job.getStatus() == BacktestStatus.FAILED)
+      return;
+    job.fail(safe.substring(0, Math.min(safe.length(), 1000)));
+    events.publishEvent(
+        new com.finrisk.radar.backtest.service.BacktestFinishedNotification(
+            job.getJobId(),
+            job.getRequestedByUserId(),
+            job.getAssetId(),
+            job.getStatus(),
+            Instant.now()));
   }
 
   @Transactional(readOnly = true)

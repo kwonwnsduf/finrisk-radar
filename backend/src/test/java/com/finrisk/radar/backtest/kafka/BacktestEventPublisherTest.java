@@ -11,13 +11,15 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 @SuppressWarnings("unchecked")
 class BacktestEventPublisherTest {
 	@Test
 	void publishesUsingTheJobIdAsTheKafkaKey() {
 		KafkaTemplate<String, Object> template = mock(KafkaTemplate.class);
-		BacktestEventPublisher publisher = new BacktestEventPublisher(template);
+		BacktestEventPublisher publisher =
+				new BacktestEventPublisher(template, new SimpleMeterRegistry());
 		BacktestRequestedEvent event = new BacktestRequestedEvent(UUID.randomUUID(), Instant.now());
 		when(template.send(BacktestTopics.REQUESTED, event.jobId().toString(), event))
 				.thenReturn(CompletableFuture.completedFuture(null));
@@ -30,7 +32,8 @@ class BacktestEventPublisherTest {
 	@Test
 	void convertsBrokerFailuresToADomainPublisherException() {
 		KafkaTemplate<String, Object> template = mock(KafkaTemplate.class);
-		BacktestEventPublisher publisher = new BacktestEventPublisher(template);
+		BacktestEventPublisher publisher =
+				new BacktestEventPublisher(template, new SimpleMeterRegistry());
 		BacktestRequestedEvent event = new BacktestRequestedEvent(UUID.randomUUID(), Instant.now());
 		CompletableFuture<SendResult<String, Object>> failed = new CompletableFuture<>();
 		failed.completeExceptionally(new RuntimeException("broker unavailable"));

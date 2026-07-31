@@ -69,5 +69,19 @@ class RagFlywayMigrationIntegrationTest {
                     + "WHERE conrelid = 'ai_reports'::regclass AND contype = 'c'",
                 String.class))
         .contains("ck_ai_reports_target");
+    assertThat(jdbc.queryForObject("SELECT to_regclass('public.notifications')", String.class))
+        .isEqualTo("notifications");
+    assertThat(
+            jdbc.queryForObject(
+                "SELECT format_type(atttypid, atttypmod) FROM pg_attribute "
+                    + "WHERE attrelid = 'notifications'::regclass AND attname = 'event_id'",
+                String.class))
+        .isEqualTo("character varying(100)");
+    assertThat(
+            jdbc.queryForList(
+                "SELECT conname FROM pg_constraint "
+                    + "WHERE conrelid = 'notifications'::regclass AND contype = 'u'",
+                String.class))
+        .contains("uq_notifications_event_user");
   }
 }

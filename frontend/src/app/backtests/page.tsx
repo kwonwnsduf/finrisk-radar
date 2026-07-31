@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -13,7 +14,15 @@ export default function BacktestsPage() {
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />
           <main className="flex-1 p-5 md:p-8">
-            <BacktestWorkbench />
+            <Suspense
+              fallback={
+                <p className="py-12 text-center text-sm text-slate-500">
+                  Loading backtest…
+                </p>
+              }
+            >
+              <BacktestWorkbench />
+            </Suspense>
           </main>
         </div>
       </div>

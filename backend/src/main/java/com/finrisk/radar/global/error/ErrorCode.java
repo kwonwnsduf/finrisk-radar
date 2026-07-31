@@ -181,6 +181,8 @@ public enum ErrorCode {
   FSD_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "FSD_001", "FSD event was not found."),
   FSD_INVALID_STATUS_TRANSITION(
       HttpStatus.CONFLICT, "FSD_002", "FSD event status transition is invalid."),
+  NOTIFICATION_NOT_FOUND(
+      HttpStatus.NOT_FOUND, "NOTIFICATION_001", "Notification was not found."),
   CREDIT_EVENT_CANDIDATE_NOT_FOUND(
       HttpStatus.NOT_FOUND, "DOCUMENT_001", "Credit event candidate was not found."),
   CREDIT_EVENT_CANDIDATE_ALREADY_REVIEWED(

@@ -84,7 +84,7 @@ public class RiskResultPersistenceService {
     jobs.findById(job.getJobId()).orElseThrow().complete();
     events.publishEvent(
         new RiskCalculationCompletedNotification(
-            job.getJobId(), job.getAssetId(), score, List.copyOf(saved)));
+            job.getJobId(), job.getUserId(), job.getAssetId(), score, List.copyOf(saved)));
     return score;
   }
 

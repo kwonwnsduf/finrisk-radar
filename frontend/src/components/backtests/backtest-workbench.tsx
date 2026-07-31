@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { createBacktestReport } from "@/lib/api/reports";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const BASIC_STRATEGIES: { type: StrategyType; label: string }[] = [
   { type: "BUY_AND_HOLD", label: "Buy & Hold" },
@@ -99,6 +99,8 @@ const VALUE_CONDITIONS = new Set<CustomConditionType>([
 
 export function BacktestWorkbench() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const linkedJobId = searchParams.get("jobId");
   const [mode, setMode] = useState<"BASIC" | "CUSTOM">("BASIC");
   const [assetId, setAssetId] = useState("1");
   const [startDate, setStartDate] = useState("2020-01-01");
@@ -114,11 +116,29 @@ export function BacktestWorkbench() {
     { type: "STOP_LOSS", value: -5 },
   ]);
   const [job, setJob] = useState<BacktestJob | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(linkedJobId));
   const [error, setError] = useState<string | null>(null);
 
   const activeJobId =
     job?.status === "REQUESTED" || job?.status === "RUNNING" ? job.jobId : null;
+
+  useEffect(() => {
+    if (!linkedJobId) return;
+    let active = true;
+    getBacktestJob(linkedJobId)
+      .then((value) => {
+        if (active) setJob(value);
+      })
+      .catch(() => {
+        if (active) setError("The linked backtest could not be loaded.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [linkedJobId]);
 
   useEffect(() => {
     if (!activeJobId) return;

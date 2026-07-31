@@ -18,14 +18,29 @@ public class RiskAfterCommitEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void completed(RiskCalculationCompletedNotification n) {
     RiskScore s = n.score();
+    RiskSeverity highestSeverity =
+        n.signals().stream()
+            .map(RiskSignal::getSeverity)
+            .max(java.util.Comparator.naturalOrder())
+            .orElse(RiskSeverity.INFO);
+    long highRiskSignalCount =
+        n.signals().stream()
+            .filter(
+                signal ->
+                    signal.getSeverity() == RiskSeverity.HIGH
+                        || signal.getSeverity() == RiskSeverity.CRITICAL)
+            .count();
     publisher.publishCalculated(
         new RiskScoreCalculatedEvent(
             n.jobId(),
+            n.userId(),
             n.assetId(),
             s.getId(),
             s.getTotalScore(),
             s.getRiskGrade(),
             s.getDefaultStatus(),
+            highestSeverity,
+            highRiskSignalCount,
             Instant.now()));
     n.signals().stream()
         .filter(

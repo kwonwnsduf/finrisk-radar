@@ -1,5 +1,7 @@
 # FinRisk Radar
 
+[Day 16 인앱 알림 시스템](docs/day16-in-app-notifications.md)
+
 [Day 14 백엔드 중심 코드 흐름 가이드](docs/day14-code-flow-guide.md)
 
 결제·구독·FSD 구현과 운영 설정은

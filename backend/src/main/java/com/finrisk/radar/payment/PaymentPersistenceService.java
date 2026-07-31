@@ -196,7 +196,16 @@ class PaymentPersistenceService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   void markRecoveryRequired(String orderId) {
-    orders.findByOrderIdForUpdate(orderId).ifPresent(PaymentOrder::recoveryRequired);
+    orders
+        .findByOrderIdForUpdate(orderId)
+        .ifPresent(
+            order -> {
+              order.recoveryRequired();
+              outbox.append(
+                  order.getOrderId(),
+                  "PaymentRecoveryRequiredEvent",
+                  basePayload(order, null, order.getAmount()));
+            });
   }
 
   private void validate(PaymentOrder order, GatewayPayment payment) {

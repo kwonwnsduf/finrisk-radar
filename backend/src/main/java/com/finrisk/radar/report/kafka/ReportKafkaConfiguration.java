@@ -10,4 +10,14 @@ public class ReportKafkaConfiguration {
   NewTopic reportGenerationRequestedTopic() {
     return TopicBuilder.name(ReportTopics.GENERATION_REQUESTED).partitions(1).replicas(1).build();
   }
+
+  @Bean
+  NewTopic reportCompletedTopic() {
+    return TopicBuilder.name(ReportTopics.COMPLETED).partitions(1).replicas(1).build();
+  }
+
+  @Bean
+  NewTopic reportFailedTopic() {
+    return TopicBuilder.name(ReportTopics.FAILED).partitions(1).replicas(1).build();
+  }
 }

@@ -7,9 +7,11 @@ import com.finrisk.radar.usage.*;
 import com.finrisk.radar.user.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.*;
 
 @Service
@@ -18,16 +20,19 @@ public class ReportPersistenceService {
   private final UserRepository users;
   private final MeterRegistry meters;
   private final ReportPromptFactory prompts;
+  private final ApplicationEventPublisher events;
 
   public ReportPersistenceService(
       AiReportRepository reports,
       UserRepository users,
       MeterRegistry meters,
-      ReportPromptFactory prompts) {
+      ReportPromptFactory prompts,
+      ApplicationEventPublisher events) {
     this.reports = reports;
     this.users = users;
     this.meters = meters;
     this.prompts = prompts;
+    this.events = events;
   }
 
   @Transactional
@@ -105,20 +110,28 @@ public class ReportPersistenceService {
         generated.llm().usage().inputTokens(),
         generated.llm().usage().outputTokens());
     meters.counter("report.generated", "reportType", r.getReportType().name()).increment();
+    publishFinished(r);
   }
 
   @Transactional
   public void fail(UUID id, String code, String message, boolean retryable) {
     AiReport r = locked(id);
+    if (r.getStatus() == ReportStatus.COMPLETED || r.getStatus() == ReportStatus.FAILED) return;
     r.fail(code, message, retryable);
     meters.counter("report.failed", "reportType", r.getReportType().name()).increment();
+    publishFinished(r);
   }
 
   @Transactional
   public Optional<String> failAndMarkCompensation(UUID id, String code, String message) {
     AiReport r = locked(id);
+    boolean terminal =
+        r.getStatus() == ReportStatus.COMPLETED || r.getStatus() == ReportStatus.FAILED;
     r.fail(code, message, false);
-    meters.counter("report.failed", "reportType", r.getReportType().name()).increment();
+    if (!terminal) {
+      meters.counter("report.failed", "reportType", r.getReportType().name()).increment();
+      publishFinished(r);
+    }
     return r.markUsageCompensated() ? Optional.of(r.getUsageReservationKey()) : Optional.empty();
   }
 
@@ -133,6 +146,16 @@ public class ReportPersistenceService {
     return reports
         .findByIdForUpdate(id)
         .orElseThrow(() -> new BusinessException(ErrorCode.REPORT_NOT_FOUND));
+  }
+
+  private void publishFinished(AiReport report) {
+    events.publishEvent(
+        new ReportFinishedNotification(
+            report.getId(),
+            report.getUserId(),
+            report.getReportType(),
+            report.getStatus(),
+            Instant.now()));
   }
 
   public record Creation(AiReport report, boolean reused) {}

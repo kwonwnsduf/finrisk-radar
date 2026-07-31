@@ -6,6 +6,8 @@ import java.util.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import java.time.Instant;
 
 @Service
 @EnableConfigurationProperties(FsdProperties.class)
@@ -13,11 +15,17 @@ public class FsdEngine {
   private final FsdProperties properties;
   private final FsdRepository events;
   private final MeterRegistry meters;
+  private final ApplicationEventPublisher applicationEvents;
 
-  public FsdEngine(FsdProperties properties, FsdRepository events, MeterRegistry meters) {
+  public FsdEngine(
+      FsdProperties properties,
+      FsdRepository events,
+      MeterRegistry meters,
+      ApplicationEventPublisher applicationEvents) {
     this.properties = properties;
     this.events = events;
     this.meters = meters;
+    this.applicationEvents = applicationEvents;
   }
 
   @Transactional
@@ -170,7 +178,15 @@ public class FsdEngine {
       if (orderId != null
           && events.existsByPaymentOrderIdAndRuleCodeAndPhase(orderId, result.ruleCode(), phase))
         continue;
-      events.saveAndFlush(FsdEvent.detected(orderId, attemptId, userId, phase, result));
+      FsdEvent saved =
+          events.saveAndFlush(FsdEvent.detected(orderId, attemptId, userId, phase, result));
+      applicationEvents.publishEvent(
+          new FsdDetectedNotification(
+              saved.getId(),
+              saved.getPaymentOrderId(),
+              saved.getDecision(),
+              saved.getSeverity(),
+              Instant.now()));
       meters
           .counter("fsd.detected", "phase", phase.name(), "decision", result.decision().name())
           .increment();

@@ -1,15 +1,16 @@
 "use client";
 
-import { Bell, LogOut, Menu } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { LogOut, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Button } from "@/components/ui/button";
-import { useUiStore } from "@/store/ui-store";
-import { useAuthStore } from "@/store/auth-store";
 import { logout } from "@/lib/api/auth";
 import { clearAuthSession } from "@/lib/auth/session";
+import { useAuthStore } from "@/store/auth-store";
+import { useUiStore } from "@/store/ui-store";
 
 export function Header() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
@@ -40,30 +41,34 @@ export function Header() {
           size="icon"
           variant="ghost"
           onClick={toggleSidebar}
-          aria-label="사이드바 전환"
+          aria-label="Toggle sidebar"
           className="hidden md:inline-flex"
         >
           <Menu className="size-5" />
         </Button>
         <div>
-          <h1 className="text-base font-bold text-slate-950">대시보드</h1>
+          <h1 className="text-base font-bold text-slate-950">Dashboard</h1>
           <p className="hidden text-xs text-slate-500 sm:block">
-            금융 리스크 현황을 한눈에 확인하세요
+            Monitor your financial risk status at a glance.
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button type="button" size="icon" variant="ghost" aria-label="알림">
-          <Bell className="size-5" />
-        </Button>
+        <NotificationBell />
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
           <p className="text-xs text-slate-500">{user?.email}</p>
         </div>
-        <Button type="button" size="sm" variant="ghost" onClick={handleLogout} disabled={isLoggingOut}>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
           <LogOut className="size-4" aria-hidden="true" />
-          {isLoggingOut ? "로그아웃 중" : "로그아웃"}
+          {isLoggingOut ? "Logging out…" : "Log out"}
         </Button>
       </div>
     </header>

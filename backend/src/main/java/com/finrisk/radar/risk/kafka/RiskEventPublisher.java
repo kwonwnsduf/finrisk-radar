@@ -2,6 +2,7 @@ package com.finrisk.radar.risk.kafka;
 
 import com.finrisk.radar.risk.event.*;
 import java.util.concurrent.TimeUnit;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.*;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -10,9 +11,11 @@ import org.springframework.stereotype.Component;
 public class RiskEventPublisher {
   private static final Logger log = LoggerFactory.getLogger(RiskEventPublisher.class);
   private final KafkaTemplate<String, Object> template;
+  private final MeterRegistry meters;
 
-  public RiskEventPublisher(KafkaTemplate<String, Object> t) {
+  public RiskEventPublisher(KafkaTemplate<String, Object> t, MeterRegistry meters) {
     template = t;
+    this.meters = meters;
   }
 
   public void publishRequested(RiskScoreRequestedEvent e) {
@@ -50,15 +53,27 @@ public class RiskEventPublisher {
 
   private void sendAsync(String topic, String key, Object value) {
     long start = System.nanoTime();
-    template
-        .send(topic, key, value)
-        .whenComplete(
-            (r, e) -> {
-              long ms = (System.nanoTime() - start) / 1_000_000;
-              if (e == null)
-                log.debug("event=risk_event_published topic={} elapsedMs={}", topic, ms);
-              else log.error("event=risk_event_publish_failed topic={} elapsedMs={}", topic, ms, e);
-            });
+    try {
+      template
+          .send(topic, key, value)
+          .whenComplete(
+              (r, e) -> {
+                long ms = (System.nanoTime() - start) / 1_000_000;
+                if (e == null)
+                  log.debug("event=risk_event_published topic={} elapsedMs={}", topic, ms);
+                else recordAsyncFailure(topic, ms, e);
+              });
+    } catch (RuntimeException exception) {
+      recordAsyncFailure(topic, (System.nanoTime() - start) / 1_000_000, exception);
+    }
+  }
+
+  private void recordAsyncFailure(String topic, long elapsedMs, Throwable error) {
+    log.error("event=risk_event_publish_failed topic={} elapsedMs={}", topic, elapsedMs, error);
+    meters
+        .counter(
+            "notification.event.publish.failure", "source", "risk", "topic", topic)
+        .increment();
   }
 
   private void pause(long seconds) {
