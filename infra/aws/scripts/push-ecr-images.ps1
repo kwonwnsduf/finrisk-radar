@@ -146,6 +146,7 @@ try {
 
     Invoke-CheckedCommand -Command "docker" -Arguments @(
         "build",
+        "--provenance=false",
         "--file", "backend/Dockerfile",
         "--tag", $backendLocalImage,
         "backend"
@@ -153,6 +154,7 @@ try {
 
     Invoke-CheckedCommand -Command "docker" -Arguments @(
         "build",
+        "--provenance=false",
         "--file", "frontend/Dockerfile",
         "--tag", $frontendLocalImage,
         "--build-arg", "NEXT_PUBLIC_API_BASE_URL=",

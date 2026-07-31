@@ -172,6 +172,11 @@ sha-abcdef123456
 않는다. `latest`만 mutable이고 나머지는 덮어쓸 수 없다. 스크립트는 dirty
 worktree를 거부하므로 push 전에 Day 17 변경을 commit해야 한다.
 
+ECR immutable Repository에서는 BuildKit provenance attestation과 최종 image
+index가 같은 tag를 순차 등록하며 충돌할 수 있다. push 스크립트는
+`--provenance=false`로 단일 image manifest를 빌드해 immutable tag를 한 번만
+등록한다.
+
 ```powershell
 Set-Location C:\Projects\finrisk-radar
 .\infra\aws\scripts\push-ecr-images.ps1 `
