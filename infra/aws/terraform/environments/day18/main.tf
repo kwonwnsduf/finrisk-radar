@@ -16,9 +16,6 @@ locals {
     key => "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter${name}"
   }
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
-  ecr_registry       = split("/", data.aws_ecr_repository.backend.repository_url)[0]
-  backend_image      = "${data.aws_ecr_repository.backend.repository_url}@${data.aws_ecr_image.backend.image_digest}"
-  frontend_image     = "${data.aws_ecr_repository.frontend.repository_url}@${data.aws_ecr_image.frontend.image_digest}"
 }
 
 ephemeral "aws_ssm_parameter" "db_password" {
@@ -68,24 +65,17 @@ module "compute" {
   instance_type     = var.instance_type
   root_volume_size  = 20
 
-  backend_image       = local.backend_image
-  frontend_image      = local.frontend_image
   ecr_repository_arns = [data.aws_ecr_repository.backend.arn, data.aws_ecr_repository.frontend.arn]
-  ecr_registry        = local.ecr_registry
   db_address          = module.data.db_address
-  db_name             = "finrisk"
-  db_username         = "finrisk"
 
   application_bucket_name = data.aws_s3_bucket.application.id
   application_bucket_arn  = data.aws_s3_bucket.application.arn
   application_kms_key_arn = var.application_kms_key_arn
 
-  secret_parameter_names = local.secret_parameter_names
-  secret_parameter_arns  = local.secret_parameter_arns
+  secret_parameter_arns = local.secret_parameter_arns
 
   container_log_group_name = module.data.container_log_group_name
   container_log_group_arn  = module.data.container_log_group_arn
-  bootstrap_log_group_name = module.data.bootstrap_log_group_name
   bootstrap_log_group_arn  = module.data.bootstrap_log_group_arn
 
   google_client_id       = var.google_client_id

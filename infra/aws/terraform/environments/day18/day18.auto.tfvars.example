@@ -1,8 +1,6 @@
 # Copy this file to day18.auto.tfvars. The copied file is ignored by Git.
 # Do not place secrets in this file.
 
-image_tag = "sha-abcdef123456"
-
 google_client_id       = "replace-with-google-client-id"
 toss_widget_client_key = "replace-with-toss-widget-client-key"
 naver_client_id        = "replace-with-naver-client-id"

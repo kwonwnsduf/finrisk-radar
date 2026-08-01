@@ -24,31 +24,11 @@ variable "root_volume_size" {
   default = 20
 }
 
-variable "backend_image" {
-  type = string
-}
-
-variable "frontend_image" {
-  type = string
-}
-
 variable "ecr_repository_arns" {
   type = list(string)
 }
 
-variable "ecr_registry" {
-  type = string
-}
-
 variable "db_address" {
-  type = string
-}
-
-variable "db_name" {
-  type = string
-}
-
-variable "db_username" {
   type = string
 }
 
@@ -65,10 +45,6 @@ variable "application_kms_key_arn" {
   default = null
 }
 
-variable "secret_parameter_names" {
-  type = map(string)
-}
-
 variable "secret_parameter_arns" {
   type = map(string)
 }
@@ -78,10 +54,6 @@ variable "container_log_group_name" {
 }
 
 variable "container_log_group_arn" {
-  type = string
-}
-
-variable "bootstrap_log_group_name" {
   type = string
 }
 
@@ -103,9 +75,4 @@ variable "naver_client_id" {
 
 variable "openai_llm_model" {
   type = string
-}
-
-variable "docker_compose_version" {
-  type    = string
-  default = "v2.32.4"
 }

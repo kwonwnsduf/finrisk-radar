@@ -3,8 +3,8 @@ name: finrisk-radar-day18
 x-logging: &awslogs
   driver: awslogs
   options:
-    awslogs-region: ${aws_region}
-    awslogs-group: ${container_log_group_name}
+    awslogs-region: ${AWS_REGION}
+    awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
     awslogs-create-group: "false"
 
 services:
@@ -12,32 +12,23 @@ services:
     image: redis:7.4.9-alpine
     restart: unless-stopped
     mem_limit: 96m
-    command:
-      - redis-server
-      - --appendonly
-      - "yes"
-      - --requirepass
-      - $${REDIS_PASSWORD}
-      - --maxmemory
-      - 64mb
-      - --maxmemory-policy
-      - noeviction
-    expose:
-      - "6379"
-    volumes:
-      - redis_data:/data
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "64mb", "--maxmemory-policy", "noeviction"]
+    expose: ["6379"]
+    volumes: ["redis_data:/data"]
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: redis-$${INSTANCE_ID}
+        awslogs-stream: redis-${INSTANCE_ID}
     networks: [finrisk]
 
   zookeeper:
@@ -48,8 +39,7 @@ services:
       KAFKA_HEAP_OPTS: -Xms64m -Xmx128m
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    expose:
-      - "2181"
+    expose: ["2181"]
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_log:/var/lib/zookeeper/log
@@ -61,10 +51,10 @@ services:
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: zookeeper-$${INSTANCE_ID}
+        awslogs-stream: zookeeper-${INSTANCE_ID}
     networks: [finrisk]
 
   kafka:
@@ -89,10 +79,8 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 1
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    expose:
-      - "9092"
-    volumes:
-      - kafka_data:/var/lib/kafka/data
+    expose: ["9092"]
+    volumes: ["kafka_data:/var/lib/kafka/data"]
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
       interval: 10s
@@ -102,14 +90,14 @@ services:
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: kafka-$${INSTANCE_ID}
+        awslogs-stream: kafka-${INSTANCE_ID}
     networks: [finrisk]
 
   backend:
-    image: ${backend_image}
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
     restart: unless-stopped
     mem_limit: 640m
     env_file: .env.prod
@@ -119,8 +107,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    expose:
-      - "8080"
+    expose: ["8080"]
     depends_on:
       redis:
         condition: service_healthy
@@ -135,21 +122,20 @@ services:
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: backend-$${INSTANCE_ID}
+        awslogs-stream: backend-${INSTANCE_ID}
     networks: [finrisk]
 
   frontend:
-    image: ${frontend_image}
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE is required}
     restart: unless-stopped
     mem_limit: 160m
     environment:
       BACKEND_API_URL: http://backend:8080
       NODE_OPTIONS: --max-old-space-size=112
-    expose:
-      - "3000"
+    expose: ["3000"]
     depends_on:
       backend:
         condition: service_healthy
@@ -162,20 +148,18 @@ services:
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: frontend-$${INSTANCE_ID}
+        awslogs-stream: frontend-${INSTANCE_ID}
     networks: [finrisk]
 
   nginx:
     image: nginx:1.28.0-alpine
     restart: unless-stopped
     mem_limit: 32m
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports: ["80:80"]
+    volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
     depends_on:
       backend:
         condition: service_healthy
@@ -190,10 +174,10 @@ services:
     logging:
       <<: *awslogs
       options:
-        awslogs-region: ${aws_region}
-        awslogs-group: ${container_log_group_name}
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
         awslogs-create-group: "false"
-        awslogs-stream: nginx-$${INSTANCE_ID}
+        awslogs-stream: nginx-${INSTANCE_ID}
     networks: [finrisk]
 
 volumes:

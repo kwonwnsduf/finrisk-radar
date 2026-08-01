@@ -13,19 +13,6 @@ variable "environment" {
   default = "day18"
 }
 
-variable "image_tag" {
-  description = "Existing immutable deployment tag present in both ECR repositories."
-  type        = string
-
-  validation {
-    condition = can(regex(
-      "^(sha-[0-9a-f]{7,40}|day18-[a-z0-9][a-z0-9._-]{0,120})$",
-      var.image_tag
-    ))
-    error_message = "image_tag must use sha-<git-sha> or an immutable day18-<release> format."
-  }
-}
-
 variable "backend_repository_name" {
   type    = string
   default = "finrisk-backend"

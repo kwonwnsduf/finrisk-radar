@@ -26,16 +26,6 @@ data "aws_ecr_repository" "frontend" {
   name = var.frontend_repository_name
 }
 
-data "aws_ecr_image" "backend" {
-  repository_name = data.aws_ecr_repository.backend.name
-  image_tag       = var.image_tag
-}
-
-data "aws_ecr_image" "frontend" {
-  repository_name = data.aws_ecr_repository.frontend.name
-  image_tag       = var.image_tag
-}
-
 data "aws_s3_bucket" "application" {
   bucket = var.application_bucket_name
 }

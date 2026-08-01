@@ -14,14 +14,6 @@ output "application_bucket" {
   value = data.aws_s3_bucket.application.id
 }
 
-output "backend_image" {
-  value = local.backend_image
-}
-
-output "frontend_image" {
-  value = local.frontend_image
-}
-
 output "secret_parameter_names" {
   value = local.secret_parameter_names
 }

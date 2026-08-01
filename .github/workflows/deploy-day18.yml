@@ -96,8 +96,15 @@ jobs:
           INSTANCE_ID: ${{ steps.release.outputs.instance_id }}
         run: |
           set -Eeuo pipefail
+          for attempt in $(seq 1 30); do
+            ping_status=$(aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$INSTANCE_ID" --query 'InstanceInformationList[0].PingStatus' --output text)
+            [[ "$ping_status" == "Online" ]] && break
+            [[ "$attempt" == "30" ]] && { echo "EC2 did not become SSM Online" >&2; exit 1; }
+            sleep 10
+          done
+
           script_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/infra/aws/scripts/deploy-day18-via-ssm.sh"
-          remote_command="curl -fsSL '$script_url' -o /tmp/finrisk-day18-deploy.sh && chmod 0700 /tmp/finrisk-day18-deploy.sh && sudo /tmp/finrisk-day18-deploy.sh '$BACKEND_IMAGE' '$FRONTEND_IMAGE'"
+          remote_command="curl -fsSL '$script_url' -o /tmp/finrisk-day18-deploy.sh && chmod 0700 /tmp/finrisk-day18-deploy.sh && sudo /tmp/finrisk-day18-deploy.sh '$BACKEND_IMAGE' '$FRONTEND_IMAGE' '$GITHUB_SHA'"
           jq -n --arg command "$remote_command" '{commands: [$command]}' > ssm-parameters.json
           command_id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name AWS-RunShellScript --parameters file://ssm-parameters.json --query 'Command.CommandId' --output text)
 

@@ -67,6 +67,7 @@ data "aws_iam_policy_document" "deploy" {
     sid = "ReadDeploymentResult"
     actions = [
       "ec2:DescribeInstances",
+      "ssm:DescribeInstanceInformation",
       "ssm:GetCommandInvocation"
     ]
     resources = ["*"]

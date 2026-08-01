@@ -34,7 +34,7 @@ TOSS_WIDGET_CLIENT_KEY=<test_gck_...>
 
 The workflow is `.github/workflows/deploy-day18.yml`. A push to `main` affecting the backend, frontend, or deployment files triggers it; `workflow_dispatch` also permits a manual run. Secret application values remain in `/finrisk/day18/*` SSM SecureString parameters and are never copied into GitHub.
 
-Migration is intentionally staged. The first phase keeps the existing EC2 bootstrap files and proves GitHub Actions deployment against the running instance. Only after that succeeds should the Terraform `.tftpl` bootstrap be replaced with a minimal static bootstrap, avoiding an untested EC2 replacement.
+The migration was validated in two stages. GitHub Actions deployment was proven against the original instance first; Terraform now supplies only the static `modules/compute/files/bootstrap.sh`. Compose, Nginx, CloudWatch, and deployment files are ordinary files downloaded from the exact Git commit by the SSM deployment. No `.tftpl` files remain.
 
 ## Existing local configuration analysis
 
@@ -66,7 +66,6 @@ Copy-Item `
 
 Edit `day18.auto.tfvars` and set:
 
-- the existing ECR `image_tag`;
 - Google client ID;
 - Toss widget client key;
 - Naver client ID;
@@ -75,12 +74,7 @@ Edit `day18.auto.tfvars` and set:
 
 The file is covered by the repository's `*.tfvars` ignore rule. It must never contain a password, API secret, token, or private key.
 
-The Toss client key is a frontend build-time value. If the selected ECR image was built without it, build and push a new SHA image after committing the implementation:
-
-```powershell
-.\infra\aws\scripts\push-ecr-images.ps1 `
-  -TossWidgetClientKey "<public-widget-client-key>"
-```
+The Toss client key is a frontend build-time value. GitHub Actions reads it from the non-secret repository variable `TOSS_WIDGET_CLIENT_KEY` and embeds it while building the frontend image.
 
 ## SSM parameter contract
 
