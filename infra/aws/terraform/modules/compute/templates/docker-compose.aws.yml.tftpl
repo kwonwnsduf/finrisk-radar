@@ -1,0 +1,207 @@
+name: finrisk-radar-day18
+
+x-logging: &awslogs
+  driver: awslogs
+  options:
+    awslogs-region: ${aws_region}
+    awslogs-group: ${container_log_group_name}
+    awslogs-create-group: "false"
+
+services:
+  redis:
+    image: redis:7.4.9-alpine
+    restart: unless-stopped
+    mem_limit: 96m
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - $${REDIS_PASSWORD}
+      - --maxmemory
+      - 64mb
+      - --maxmemory-policy
+      - noeviction
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: redis-$${INSTANCE_ID}
+    networks: [finrisk]
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    restart: unless-stopped
+    mem_limit: 192m
+    environment:
+      KAFKA_HEAP_OPTS: -Xms64m -Xmx128m
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    expose:
+      - "2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD-SHELL", "cub zk-ready localhost:2181 30"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: zookeeper-$${INSTANCE_ID}
+    networks: [finrisk]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    restart: unless-stopped
+    mem_limit: 384m
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx256m
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    expose:
+      - "9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: kafka-$${INSTANCE_ID}
+    networks: [finrisk]
+
+  backend:
+    image: ${backend_image}
+    restart: unless-stopped
+    mem_limit: 640m
+    env_file: .env.prod
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_OPTS: -Xms128m -Xmx384m -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    expose:
+      - "8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: backend-$${INSTANCE_ID}
+    networks: [finrisk]
+
+  frontend:
+    image: ${frontend_image}
+    restart: unless-stopped
+    mem_limit: 160m
+    environment:
+      BACKEND_API_URL: http://backend:8080
+      NODE_OPTIONS: --max-old-space-size=112
+    expose:
+      - "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: frontend-$${INSTANCE_ID}
+    networks: [finrisk]
+
+  nginx:
+    image: nginx:1.28.0-alpine
+    restart: unless-stopped
+    mem_limit: 32m
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${aws_region}
+        awslogs-group: ${container_log_group_name}
+        awslogs-create-group: "false"
+        awslogs-stream: nginx-$${INSTANCE_ID}
+    networks: [finrisk]
+
+volumes:
+  redis_data:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
+
+networks:
+  finrisk:
+    driver: bridge

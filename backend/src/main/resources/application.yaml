@@ -131,8 +131,6 @@ app:
       base-url: ${YAHOO_FINANCE_BASE_URL:https://query1.finance.yahoo.com}
     s3:
       region: ${AWS_REGION:}
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
       bucket: ${AWS_S3_BUCKET:}
   dart:
     base-url: ${DART_BASE_URL:https://opendart.fss.or.kr}

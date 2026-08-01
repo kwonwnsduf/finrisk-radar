@@ -1,0 +1,19 @@
+# Copy this file to day18.auto.tfvars. The copied file is ignored by Git.
+# Do not place secrets in this file.
+
+image_tag = "sha-abcdef123456"
+
+google_client_id       = "replace-with-google-client-id"
+toss_widget_client_key = "replace-with-toss-widget-client-key"
+naver_client_id        = "replace-with-naver-client-id"
+openai_llm_model       = "replace-with-responses-api-model"
+
+# Restrict this to the operator IP when public portfolio access is unnecessary.
+allowed_http_cidrs = ["0.0.0.0/0"]
+
+# Set only if finrisk-raw-data uses a customer-managed KMS key.
+application_kms_key_arn = null
+
+common_tags = {
+  Service = "finrisk-radar"
+}

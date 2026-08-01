@@ -39,6 +39,7 @@ terraform.tfstate
 terraform.tfstate.*
 *.tfvars
 !*.tfvars.example
+backend.hcl
 *.tfplan
 crash.log
 crash.*.log

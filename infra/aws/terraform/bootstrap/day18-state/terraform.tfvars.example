@@ -1,0 +1,4 @@
+aws_region = "ap-northeast-2"
+
+# Normally leave null so the account-based globally unique default is used.
+state_bucket_name = null

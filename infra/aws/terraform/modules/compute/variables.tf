@@ -1,0 +1,111 @@
+variable "name_prefix" {
+  type = string
+}
+
+variable "aws_region" {
+  type = string
+}
+
+variable "subnet_id" {
+  type = string
+}
+
+variable "security_group_id" {
+  type = string
+}
+
+variable "instance_type" {
+  type    = string
+  default = "t3.small"
+}
+
+variable "root_volume_size" {
+  type    = number
+  default = 20
+}
+
+variable "backend_image" {
+  type = string
+}
+
+variable "frontend_image" {
+  type = string
+}
+
+variable "ecr_repository_arns" {
+  type = list(string)
+}
+
+variable "ecr_registry" {
+  type = string
+}
+
+variable "db_address" {
+  type = string
+}
+
+variable "db_name" {
+  type = string
+}
+
+variable "db_username" {
+  type = string
+}
+
+variable "application_bucket_name" {
+  type = string
+}
+
+variable "application_bucket_arn" {
+  type = string
+}
+
+variable "application_kms_key_arn" {
+  type    = string
+  default = null
+}
+
+variable "secret_parameter_names" {
+  type = map(string)
+}
+
+variable "secret_parameter_arns" {
+  type = map(string)
+}
+
+variable "container_log_group_name" {
+  type = string
+}
+
+variable "container_log_group_arn" {
+  type = string
+}
+
+variable "bootstrap_log_group_name" {
+  type = string
+}
+
+variable "bootstrap_log_group_arn" {
+  type = string
+}
+
+variable "google_client_id" {
+  type = string
+}
+
+variable "toss_widget_client_key" {
+  type = string
+}
+
+variable "naver_client_id" {
+  type = string
+}
+
+variable "openai_llm_model" {
+  type = string
+}
+
+variable "docker_compose_version" {
+  type    = string
+  default = "v2.32.4"
+}

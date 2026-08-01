@@ -1,0 +1,116 @@
+name: Deploy Day18 to AWS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - frontend/**
+      - infra/aws/scripts/deploy-day18-via-ssm.sh
+      - .github/workflows/deploy-day18.yml
+
+concurrency:
+  group: finrisk-day18-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  AWS_ACCOUNT_ID: "422060263480"
+  BACKEND_REPOSITORY: finrisk-backend
+  FRONTEND_REPOSITORY: finrisk-frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Require public build configuration
+        env:
+          TOSS_WIDGET_CLIENT_KEY: ${{ vars.TOSS_WIDGET_CLIENT_KEY }}
+        run: test -n "$TOSS_WIDGET_CLIENT_KEY"
+
+      - name: Authenticate to AWS with OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::422060263480:role/finrisk-day18-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push immutable images
+        env:
+          IMAGE_TAG: sha-${{ github.sha }}
+          TOSS_WIDGET_CLIENT_KEY: ${{ vars.TOSS_WIDGET_CLIENT_KEY }}
+        run: |
+          set -Eeuo pipefail
+          registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+          if ! aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids "imageTag=$IMAGE_TAG" >/dev/null 2>&1; then
+            docker build --provenance=false -f backend/Dockerfile -t "$registry/$BACKEND_REPOSITORY:$IMAGE_TAG" backend
+            docker push "$registry/$BACKEND_REPOSITORY:$IMAGE_TAG"
+          fi
+
+          if ! aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids "imageTag=$IMAGE_TAG" >/dev/null 2>&1; then
+            docker build --provenance=false -f frontend/Dockerfile \
+              --build-arg NEXT_PUBLIC_API_BASE_URL= \
+              --build-arg NEXT_PUBLIC_OAUTH_BASE_URL= \
+              --build-arg "NEXT_PUBLIC_TOSS_CLIENT_KEY=$TOSS_WIDGET_CLIENT_KEY" \
+              -t "$registry/$FRONTEND_REPOSITORY:$IMAGE_TAG" frontend
+            docker push "$registry/$FRONTEND_REPOSITORY:$IMAGE_TAG"
+          fi
+
+      - name: Resolve immutable digests and EC2 target
+        id: release
+        env:
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          backend_digest=$(aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids "imageTag=$IMAGE_TAG" --query 'imageDetails[0].imageDigest' --output text)
+          frontend_digest=$(aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids "imageTag=$IMAGE_TAG" --query 'imageDetails[0].imageDigest' --output text)
+          instance_id=$(aws ec2 describe-instances --filters Name=tag:Name,Values=finrisk-day18-app Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text)
+          public_ip=$(aws ec2 describe-instances --instance-ids "$instance_id" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+
+          test "$instance_id" != "None"
+          {
+            echo "backend_image=$registry/$BACKEND_REPOSITORY@$backend_digest"
+            echo "frontend_image=$registry/$FRONTEND_REPOSITORY@$frontend_digest"
+            echo "instance_id=$instance_id"
+            echo "public_ip=$public_ip"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy through SSM
+        env:
+          BACKEND_IMAGE: ${{ steps.release.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ steps.release.outputs.frontend_image }}
+          INSTANCE_ID: ${{ steps.release.outputs.instance_id }}
+        run: |
+          set -Eeuo pipefail
+          script_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/infra/aws/scripts/deploy-day18-via-ssm.sh"
+          remote_command="curl -fsSL '$script_url' -o /tmp/finrisk-day18-deploy.sh && chmod 0700 /tmp/finrisk-day18-deploy.sh && sudo /tmp/finrisk-day18-deploy.sh '$BACKEND_IMAGE' '$FRONTEND_IMAGE'"
+          jq -n --arg command "$remote_command" '{commands: [$command]}' > ssm-parameters.json
+          command_id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name AWS-RunShellScript --parameters file://ssm-parameters.json --query 'Command.CommandId' --output text)
+
+          set +e
+          aws ssm wait command-executed --command-id "$command_id" --instance-id "$INSTANCE_ID"
+          wait_status=$?
+          set -e
+          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' --output json
+          exit "$wait_status"
+
+      - name: Verify public health
+        env:
+          PUBLIC_IP: ${{ steps.release.outputs.public_ip }}
+        run: |
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "http://$PUBLIC_IP/"
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "http://$PUBLIC_IP/actuator/health"

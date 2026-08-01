@@ -12,6 +12,9 @@ param(
     [string]$RepositoryPrefix = "finrisk",
 
     [Parameter()]
+    [string]$TossWidgetClientKey = "",
+
+    [Parameter()]
     [switch]$IncludeMilestoneTag,
 
     [Parameter()]
@@ -159,6 +162,7 @@ try {
         "--tag", $frontendLocalImage,
         "--build-arg", "NEXT_PUBLIC_API_BASE_URL=",
         "--build-arg", "NEXT_PUBLIC_OAUTH_BASE_URL=",
+        "--build-arg", "NEXT_PUBLIC_TOSS_CLIENT_KEY=$TossWidgetClientKey",
         "frontend"
     )
 

@@ -118,8 +118,6 @@ services:
       PAYMENT_FRONTEND_BASE_URL: ${PAYMENT_FRONTEND_BASE_URL:-http://localhost}
       TOSS_SECRET_KEY: ${TOSS_WIDGET_SECRET_KEY:-}
       AWS_REGION: ${AWS_REGION:-}
-      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY:-}
-      AWS_SECRET_KEY: ${AWS_SECRET_KEY:-}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
       DART_API_KEY: ${DART_API_KEY:-}
       NAVER_NEWS_BASE_URL: ${NAVER_NEWS_BASE_URL:-https://naverapihub.apigw.ntruss.com}
