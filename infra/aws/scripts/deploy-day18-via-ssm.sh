@@ -11,8 +11,8 @@ image_pattern='^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/finrisk-(backend
 [[ -f "$COMPOSE_FILE" ]] || { echo "Missing $COMPOSE_FILE" >&2; exit 1; }
 [[ -x /opt/finrisk/deploy.sh ]] || { echo "Missing /opt/finrisk/deploy.sh" >&2; exit 1; }
 
-sed -i -E "s#^    image: .*finrisk-backend(@|:).*$#    image: $BACKEND_IMAGE#" "$COMPOSE_FILE"
-sed -i -E "s#^    image: .*finrisk-frontend(@|:).*$#    image: $FRONTEND_IMAGE#" "$COMPOSE_FILE"
+sed -i -E "/finrisk-backend(@|:)/c\\    image: $BACKEND_IMAGE" "$COMPOSE_FILE"
+sed -i -E "/finrisk-frontend(@|:)/c\\    image: $FRONTEND_IMAGE" "$COMPOSE_FILE"
 
 grep -Fq "image: $BACKEND_IMAGE" "$COMPOSE_FILE"
 grep -Fq "image: $FRONTEND_IMAGE" "$COMPOSE_FILE"
