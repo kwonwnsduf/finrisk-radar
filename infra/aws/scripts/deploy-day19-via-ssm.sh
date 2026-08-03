@@ -180,7 +180,7 @@ compose=(docker compose --env-file .env.prod -f docker-compose.yml)
 if [[ "$ROLE" == "application" ]]; then
   curl --fail --retry 60 --retry-delay 5 --retry-all-errors http://127.0.0.1/readyz
   curl --fail --retry 12 --retry-delay 5 --retry-all-errors http://127.0.0.1/
-  curl --fail --retry 12 --retry-delay 5 --retry-all-errors http://127.0.0.1/actuator/health
+  curl --fail --retry 12 --retry-delay 5 --retry-all-errors http://127.0.0.1/api/health
 else
   curl --fail --retry 60 --retry-delay 5 --retry-all-errors http://127.0.0.1:18080/readyz
   "${compose[@]}" exec -T redis redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping | grep -q PONG
