@@ -14,7 +14,16 @@ services:
     mem_limit: 96m
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "64mb", "--maxmemory-policy", "noeviction"]
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --maxmemory
+      - 64mb
+      - --maxmemory-policy
+      - noeviction
     expose: ["6379"]
     volumes: ["redis_data:/data"]
     healthcheck:
@@ -82,7 +91,11 @@ services:
     expose: ["9092"]
     volumes: ["kafka_data:/var/lib/kafka/data"]
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      test:
+        - CMD-SHELL
+        - >-
+          kafka-broker-api-versions --bootstrap-server localhost:9092
+          >/dev/null 2>&1
       interval: 10s
       timeout: 10s
       retries: 12
@@ -103,7 +116,10 @@ services:
     env_file: .env.prod
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      JAVA_OPTS: -Xms128m -Xmx384m -XX:MaxMetaspaceSize=160m -XX:+ExitOnOutOfMemoryError
+      JAVA_OPTS: >-
+        -Xms128m -Xmx384m
+        -XX:MaxMetaspaceSize=160m
+        -XX:+ExitOnOutOfMemoryError
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092

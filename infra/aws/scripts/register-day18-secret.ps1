@@ -30,14 +30,38 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $definitions = @{
-    postgres_password      = @{ Parameter = "/finrisk/day18/postgres/password"; Env = "POSTGRES_PASSWORD" }
-    redis_password         = @{ Parameter = "/finrisk/day18/redis/password"; Env = "REDIS_PASSWORD" }
-    jwt_secret             = @{ Parameter = "/finrisk/day18/jwt/secret"; Env = "JWT_SECRET" }
-    google_client_secret   = @{ Parameter = "/finrisk/day18/google/client-secret"; Env = "GOOGLE_CLIENT_SECRET" }
-    toss_widget_secret_key = @{ Parameter = "/finrisk/day18/toss/widget-secret-key"; Env = "TOSS_WIDGET_SECRET_KEY" }
-    dart_api_key           = @{ Parameter = "/finrisk/day18/dart/api-key"; Env = "DART_API_KEY" }
-    naver_client_secret    = @{ Parameter = "/finrisk/day18/naver/client-secret"; Env = "NAVER_CLIENT_SECRET" }
-    openai_api_key         = @{ Parameter = "/finrisk/day18/openai/api-key"; Env = "OPENAI_API_KEY" }
+    postgres_password = @{
+        Parameter = "/finrisk/day18/postgres/password"
+        Env       = "POSTGRES_PASSWORD"
+    }
+    redis_password = @{
+        Parameter = "/finrisk/day18/redis/password"
+        Env       = "REDIS_PASSWORD"
+    }
+    jwt_secret = @{
+        Parameter = "/finrisk/day18/jwt/secret"
+        Env       = "JWT_SECRET"
+    }
+    google_client_secret = @{
+        Parameter = "/finrisk/day18/google/client-secret"
+        Env       = "GOOGLE_CLIENT_SECRET"
+    }
+    toss_widget_secret_key = @{
+        Parameter = "/finrisk/day18/toss/widget-secret-key"
+        Env       = "TOSS_WIDGET_SECRET_KEY"
+    }
+    dart_api_key = @{
+        Parameter = "/finrisk/day18/dart/api-key"
+        Env       = "DART_API_KEY"
+    }
+    naver_client_secret = @{
+        Parameter = "/finrisk/day18/naver/client-secret"
+        Env       = "NAVER_CLIENT_SECRET"
+    }
+    openai_api_key = @{
+        Parameter = "/finrisk/day18/openai/api-key"
+        Env       = "OPENAI_API_KEY"
+    }
 }
 
 $definition = $definitions[$Secret]

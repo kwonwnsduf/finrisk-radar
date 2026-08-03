@@ -104,7 +104,9 @@ try {
         throw "Unable to inspect the Git worktree."
     }
     if ($dirtyFiles) {
-        throw "The Git worktree must be clean so the image SHA tag identifies the exact source state."
+        $message = "The Git worktree must be clean so the image SHA tag " +
+            "identifies the exact source state."
+        throw $message
     }
 
     $gitSha = (& git rev-parse --short=12 HEAD).Trim()
@@ -195,8 +197,12 @@ try {
             @{ Local = $backendLocalImage; Remote = "${backendUrl}:latest" },
             @{ Local = $frontendLocalImage; Remote = "${frontendUrl}:latest" }
         )) {
-            Invoke-CheckedCommand -Command "docker" -Arguments @("tag", $image.Local, $image.Remote)
-            Invoke-CheckedCommand -Command "docker" -Arguments @("push", $image.Remote)
+            Invoke-CheckedCommand `
+                -Command "docker" `
+                -Arguments @("tag", $image.Local, $image.Remote)
+            Invoke-CheckedCommand `
+                -Command "docker" `
+                -Arguments @("push", $image.Remote)
         }
     }
 

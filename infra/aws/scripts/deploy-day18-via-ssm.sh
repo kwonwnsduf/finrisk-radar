@@ -16,22 +16,39 @@ else
   SOURCE_REF="${3:?GitHub source commit is required}"
 fi
 
-image_pattern='^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/finrisk-(backend|frontend)@sha256:[0-9a-f]{64}$'
-[[ "$BACKEND_IMAGE" =~ $image_pattern ]] || { echo "Invalid backend image reference" >&2; exit 1; }
-[[ "$FRONTEND_IMAGE" =~ $image_pattern ]] || { echo "Invalid frontend image reference" >&2; exit 1; }
-[[ "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid GitHub source commit" >&2; exit 1; }
+image_pattern='^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/'
+image_pattern+='finrisk-(backend|frontend)@sha256:[0-9a-f]{64}$'
+
+if [[ ! "$BACKEND_IMAGE" =~ $image_pattern ]]; then
+  echo "Invalid backend image reference" >&2
+  exit 1
+fi
+if [[ ! "$FRONTEND_IMAGE" =~ $image_pattern ]]; then
+  echo "Invalid frontend image reference" >&2
+  exit 1
+fi
+if [[ ! "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Invalid GitHub source commit" >&2
+  exit 1
+fi
 
 mkdir -p "$APP_DIR"
 
 if [[ "${1:-}" != "--reuse" ]]; then
   raw_base="https://raw.githubusercontent.com/$REPOSITORY/$SOURCE_REF"
-  curl -fsSL "$raw_base/infra/aws/deploy/day18/docker-compose.yml" -o "$APP_DIR/docker-compose.yml.tmp"
-  curl -fsSL "$raw_base/infra/nginx/nginx.conf" -o "$APP_DIR/nginx.conf.tmp"
-  curl -fsSL "$raw_base/infra/aws/deploy/day18/cloudwatch-agent.json" -o "$APP_DIR/cloudwatch-agent.json.tmp"
+  deploy_base="$raw_base/infra/aws/deploy/day18"
+  curl -fsSL "$deploy_base/docker-compose.yml" \
+    -o "$APP_DIR/docker-compose.yml.tmp"
+  curl -fsSL "$raw_base/infra/nginx/nginx.conf" \
+    -o "$APP_DIR/nginx.conf.tmp"
+  curl -fsSL "$deploy_base/cloudwatch-agent.json" \
+    -o "$APP_DIR/cloudwatch-agent.json.tmp"
 
   install -m 0644 "$APP_DIR/docker-compose.yml.tmp" "$APP_DIR/docker-compose.yml"
   install -m 0644 "$APP_DIR/nginx.conf.tmp" "$APP_DIR/nginx.conf"
-  install -m 0644 "$APP_DIR/cloudwatch-agent.json.tmp" "$APP_DIR/cloudwatch-agent.json"
+  install -m 0644 \
+    "$APP_DIR/cloudwatch-agent.json.tmp" \
+    "$APP_DIR/cloudwatch-agent.json"
   install -m 0700 "$0" "$APP_DIR/deploy.sh"
   rm -f "$APP_DIR"/*.tmp
 
@@ -40,7 +57,9 @@ if [[ "${1:-}" != "--reuse" ]]; then
     "$BACKEND_IMAGE" "$FRONTEND_IMAGE" "$SOURCE_REF" > "$RELEASE_FILE"
 fi
 
-TOKEN=$(curl -fsS -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 300' http://169.254.169.254/latest/api/token)
+TOKEN=$(curl -fsS -X PUT \
+  -H 'X-aws-ec2-metadata-token-ttl-seconds: 300' \
+  http://169.254.169.254/latest/api/token)
 metadata() {
   curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/$1"
 }
@@ -50,7 +69,9 @@ instance_tag() {
 
 INSTANCE_ID=$(metadata meta-data/instance-id)
 PUBLIC_IP=$(metadata meta-data/public-ipv4)
-AWS_REGION=$(metadata dynamic/instance-identity/document | sed -n 's/.*"region"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+identity_document=$(metadata dynamic/instance-identity/document)
+region_pattern='s/.*"region"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+AWS_REGION=$(sed -n "$region_pattern" <<< "$identity_document")
 DB_ADDRESS=$(instance_tag FinriskDbAddress)
 APPLICATION_BUCKET=$(instance_tag FinriskApplicationBucket)
 GOOGLE_CLIENT_ID=$(instance_tag FinriskGoogleClientId)
@@ -62,8 +83,16 @@ CONTAINER_LOG_GROUP_NAME=$(instance_tag FinriskContainerLogGroup)
 get_secret() {
   local parameter_name="$1"
   local secret_value
-  secret_value=$(aws ssm get-parameter --region "$AWS_REGION" --name "$parameter_name" --with-decryption --query 'Parameter.Value' --output text)
-  [[ -n "$secret_value" && "$secret_value" != "None" ]] || { echo "Empty SSM parameter: $parameter_name" >&2; return 1; }
+  secret_value=$(aws ssm get-parameter \
+    --region "$AWS_REGION" \
+    --name "$parameter_name" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text)
+  if [[ -z "$secret_value" || "$secret_value" == "None" ]]; then
+    echo "Empty SSM parameter: $parameter_name" >&2
+    return 1
+  fi
   printf '%s' "$secret_value"
 }
 
@@ -124,7 +153,8 @@ Requires=docker.service
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/opt/finrisk/deploy.sh --reuse
-ExecStop=/usr/bin/docker compose --env-file /opt/finrisk/.env.prod -f /opt/finrisk/docker-compose.yml down
+ExecStop=/usr/bin/docker compose --env-file /opt/finrisk/.env.prod \
+  -f /opt/finrisk/docker-compose.yml down
 TimeoutStartSec=900
 
 [Install]
@@ -137,10 +167,12 @@ systemctl enable finrisk-deploy.service
   -a fetch-config -m ec2 -s -c file:"$APP_DIR/cloudwatch-agent.json"
 
 registry=${BACKEND_IMAGE%%/*}
-aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+aws ecr get-login-password --region "$AWS_REGION" \
+  | docker login --username AWS --password-stdin "$registry"
 
 cd "$APP_DIR"
-docker compose --env-file .env.prod -f docker-compose.yml config --quiet
-docker compose --env-file .env.prod -f docker-compose.yml pull
-docker compose --env-file .env.prod -f docker-compose.yml up -d --remove-orphans
-docker compose --env-file .env.prod -f docker-compose.yml ps
+compose=(docker compose --env-file .env.prod -f docker-compose.yml)
+"${compose[@]}" config --quiet
+"${compose[@]}" pull
+"${compose[@]}" up -d --remove-orphans
+"${compose[@]}" ps
