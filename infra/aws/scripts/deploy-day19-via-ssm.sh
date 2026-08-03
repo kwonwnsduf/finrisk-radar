@@ -4,7 +4,6 @@ exec > >(tee -a /var/log/finrisk-deploy.log) 2>&1
 
 APP_DIR=/opt/finrisk
 RELEASE_FILE="$APP_DIR/release.env"
-REPOSITORY=kwonwnsduf/finrisk-radar
 
 if [[ "${1:-}" == "--reuse" ]]; then
   [[ -f "$RELEASE_FILE" ]] || { echo "Missing $RELEASE_FILE" >&2; exit 1; }
@@ -29,26 +28,6 @@ image_pattern+='finrisk-(backend|frontend)@sha256:[0-9a-f]{64}$'
 [[ "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid GitHub source commit" >&2; exit 1; }
 
 mkdir -p "$APP_DIR"
-
-if [[ "${1:-}" != "--reuse" ]]; then
-  raw_base="https://raw.githubusercontent.com/$REPOSITORY/$SOURCE_REF"
-  deploy_base="$raw_base/infra/aws/deploy/day19"
-  compose_name="docker-compose.$ROLE.yml"
-
-  curl -fsSL "$deploy_base/$compose_name" -o "$APP_DIR/docker-compose.yml.tmp"
-  curl -fsSL "$deploy_base/cloudwatch-agent.json" -o "$APP_DIR/cloudwatch-agent.json.tmp"
-  if [[ "$ROLE" == "application" ]]; then
-    curl -fsSL "$raw_base/infra/nginx/nginx.conf" -o "$APP_DIR/nginx.conf.tmp"
-  fi
-
-  install -m 0644 "$APP_DIR/docker-compose.yml.tmp" "$APP_DIR/docker-compose.yml"
-  install -m 0644 "$APP_DIR/cloudwatch-agent.json.tmp" "$APP_DIR/cloudwatch-agent.json"
-  if [[ "$ROLE" == "application" ]]; then
-    install -m 0644 "$APP_DIR/nginx.conf.tmp" "$APP_DIR/nginx.conf"
-  fi
-  install -m 0700 "$0" "$APP_DIR/deploy.sh"
-  rm -f "$APP_DIR"/*.tmp
-fi
 
 TOKEN=$(curl -fsS -X PUT \
   -H 'X-aws-ec2-metadata-token-ttl-seconds: 300' \
@@ -77,6 +56,25 @@ if [[ "$ROLE" == "application" ]]; then
   RUNTIME_HOST=$(instance_tag FinriskRuntimeHost)
 else
   RUNTIME_HOST=$(metadata meta-data/local-hostname)
+fi
+
+if [[ "${1:-}" != "--reuse" ]]; then
+  artifact_base="s3://$APPLICATION_BUCKET/deploy/day19/$SOURCE_REF"
+  compose_name="docker-compose.$ROLE.yml"
+
+  aws s3 cp "$artifact_base/$compose_name" "$APP_DIR/docker-compose.yml.tmp" --region "$AWS_REGION"
+  aws s3 cp "$artifact_base/cloudwatch-agent.json" "$APP_DIR/cloudwatch-agent.json.tmp" --region "$AWS_REGION"
+  if [[ "$ROLE" == "application" ]]; then
+    aws s3 cp "$artifact_base/nginx.conf" "$APP_DIR/nginx.conf.tmp" --region "$AWS_REGION"
+  fi
+
+  install -m 0644 "$APP_DIR/docker-compose.yml.tmp" "$APP_DIR/docker-compose.yml"
+  install -m 0644 "$APP_DIR/cloudwatch-agent.json.tmp" "$APP_DIR/cloudwatch-agent.json"
+  if [[ "$ROLE" == "application" ]]; then
+    install -m 0644 "$APP_DIR/nginx.conf.tmp" "$APP_DIR/nginx.conf"
+  fi
+  install -m 0700 "$0" "$APP_DIR/deploy.sh"
+  rm -f "$APP_DIR"/*.tmp
 fi
 
 get_secret() {

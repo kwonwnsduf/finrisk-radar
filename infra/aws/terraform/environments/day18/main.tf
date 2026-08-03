@@ -173,8 +173,9 @@ module "cicd" {
     data.aws_ecr_repository.backend.arn,
     data.aws_ecr_repository.frontend.arn
   ]
-  runtime_instance_id  = module.compute.instance_id
-  application_asg_name = module.application_fleet.autoscaling_group_name
+  runtime_instance_id    = module.compute.instance_id
+  application_asg_name   = module.application_fleet.autoscaling_group_name
+  application_bucket_arn = data.aws_s3_bucket.application.arn
   release_parameter_arns = [
     aws_ssm_parameter.release_current.arn,
     aws_ssm_parameter.release_previous.arn

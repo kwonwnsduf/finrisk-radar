@@ -53,6 +53,12 @@ data "aws_iam_policy_document" "runtime" {
   }
 
   statement {
+    sid       = "ReadDay19DeploymentArtifacts"
+    actions   = ["s3:GetObject"]
+    resources = ["${var.application_bucket_arn}/deploy/day19/*"]
+  }
+
+  statement {
     sid = "ReadDay18Secrets"
     actions = [
       "ssm:GetParameter",

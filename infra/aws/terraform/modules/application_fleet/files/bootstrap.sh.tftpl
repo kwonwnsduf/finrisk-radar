@@ -31,7 +31,7 @@ backend_image=$(jq -er .backend_image <<<"$release")
 frontend_image=$(jq -er .frontend_image <<<"$release")
 source_ref=$(jq -er .source_ref <<<"$release")
 
-script_url="https://raw.githubusercontent.com/kwonwnsduf/finrisk-radar/$source_ref/infra/aws/scripts/deploy-day19-via-ssm.sh"
-curl -fsSL "$script_url" -o /tmp/finrisk-day19-deploy.sh
+script_uri="s3://${application_bucket_name}/deploy/day19/$source_ref/deploy-day19-via-ssm.sh"
+aws s3 cp "$script_uri" /tmp/finrisk-day19-deploy.sh --region "${aws_region}"
 chmod 0700 /tmp/finrisk-day19-deploy.sh
 /tmp/finrisk-day19-deploy.sh application "$backend_image" "$frontend_image" "$source_ref"

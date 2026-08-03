@@ -38,6 +38,7 @@ resource "aws_launch_template" "this" {
   user_data = base64encode(templatefile("${path.module}/files/bootstrap.sh.tftpl", {
     aws_region                     = var.aws_region
     current_release_parameter_name = var.current_release_parameter_name
+    application_bucket_name        = var.application_bucket_name
   }))
 
   tag_specifications {

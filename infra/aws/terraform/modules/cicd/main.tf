@@ -55,6 +55,12 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
+    sid       = "PublishDay19DeploymentArtifacts"
+    actions   = ["s3:PutObject"]
+    resources = ["${var.application_bucket_arn}/deploy/day19/*"]
+  }
+
+  statement {
     sid     = "DeployThroughSsm"
     actions = ["ssm:SendCommand"]
     resources = [

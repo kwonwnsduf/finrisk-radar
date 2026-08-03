@@ -22,6 +22,7 @@ env:
   BACKEND_REPOSITORY: finrisk-backend
   FRONTEND_REPOSITORY: finrisk-frontend
   APPLICATION_ASG: finrisk-day18-application
+  APPLICATION_BUCKET: finrisk-raw-data
   CURRENT_RELEASE_PARAMETER: /finrisk/day19/releases/current
   PREVIOUS_RELEASE_PARAMETER: /finrisk/day19/releases/previous
 
@@ -65,6 +66,16 @@ jobs:
 
       - name: Log in to ECR
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Publish immutable deployment assets
+        run: |
+          set -Eeuo pipefail
+          artifact_base="s3://$APPLICATION_BUCKET/deploy/day19/$GITHUB_SHA"
+          aws s3 cp infra/aws/scripts/deploy-day19-via-ssm.sh "$artifact_base/deploy-day19-via-ssm.sh"
+          aws s3 cp infra/aws/deploy/day19/docker-compose.app.yml "$artifact_base/docker-compose.application.yml"
+          aws s3 cp infra/aws/deploy/day19/docker-compose.runtime.yml "$artifact_base/docker-compose.runtime.yml"
+          aws s3 cp infra/aws/deploy/day19/cloudwatch-agent.json "$artifact_base/cloudwatch-agent.json"
+          aws s3 cp infra/nginx/nginx.conf "$artifact_base/nginx.conf"
 
       - name: Build and push immutable images
         env:
@@ -172,12 +183,12 @@ jobs:
 
           ssm_deploy() {
             local role="$1" instance_id="$2" manifest="$3"
-            local backend_image frontend_image source_ref script_url command command_id status
+            local backend_image frontend_image source_ref script_uri command command_id status
             backend_image=$(jq -er .backend_image <<<"$manifest")
             frontend_image=$(jq -er .frontend_image <<<"$manifest")
             source_ref=$(jq -er .source_ref <<<"$manifest")
-            script_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$source_ref/infra/aws/scripts/deploy-day19-via-ssm.sh"
-            command="curl -fsSL '$script_url' -o /tmp/finrisk-day19-deploy.sh"
+            script_uri="s3://$APPLICATION_BUCKET/deploy/day19/$source_ref/deploy-day19-via-ssm.sh"
+            command="aws s3 cp '$script_uri' /tmp/finrisk-day19-deploy.sh --region '$AWS_REGION'"
             command+=" && chmod 0700 /tmp/finrisk-day19-deploy.sh"
             command+=" && sudo /tmp/finrisk-day19-deploy.sh '$role' '$backend_image' '$frontend_image' '$source_ref'"
             parameters=$(jq -cn --arg command "$command" '{commands:[$command]}')

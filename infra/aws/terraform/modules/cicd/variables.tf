@@ -35,3 +35,7 @@ variable "application_asg_name" {
 variable "release_parameter_arns" {
   type = list(string)
 }
+
+variable "application_bucket_arn" {
+  type = string
+}
