@@ -63,7 +63,7 @@ class CustomOAuth2UserServiceTest {
 		stubGoogleResponse(true);
 		when(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, "google-subject"))
 				.thenReturn(Optional.empty());
-		when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+		when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
 		when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
 			User user = invocation.getArgument(0);
 			ReflectionTestUtils.setField(user, "id", 42L);
@@ -99,16 +99,32 @@ class CustomOAuth2UserServiceTest {
 	}
 
 	@Test
-	void rejectsLocalEmailCollisionWithoutAutomaticLinking() {
+	void reusesLocalAccountWithSameVerifiedGoogleEmail() {
 		stubGoogleResponse(true);
+		User existing = User.create("user@example.com", "encoded-password", "User");
+		ReflectionTestUtils.setField(existing, "id", 42L);
 		when(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, "google-subject"))
 				.thenReturn(Optional.empty());
-		when(userRepository.existsByEmail("user@example.com")).thenReturn(true);
+		when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
+
+		OAuth2User result = userService.loadUser(googleRequest());
+
+		assertThat(((CustomOAuth2User) result).getUserId()).isEqualTo(42L);
+		verify(userRepository, never()).saveAndFlush(any(User.class));
+	}
+
+	@Test
+	void rejectsGoogleEmailOwnedByDifferentGoogleSubject() {
+		stubGoogleResponse(true);
+		User existing = User.createGoogle("user@example.com", "encoded-password", "User", "other-subject");
+		when(userRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, "google-subject"))
+				.thenReturn(Optional.empty());
+		when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(existing));
 
 		assertThatThrownBy(() -> userService.loadUser(googleRequest()))
 				.isInstanceOf(OAuth2AuthenticationException.class)
 				.extracting(exception -> ((OAuth2AuthenticationException) exception).getError().getErrorCode())
-				.isEqualTo("oauth_email_conflict");
+				.isEqualTo("oauth_account_conflict");
 		verify(userRepository, never()).saveAndFlush(any(User.class));
 	}
 

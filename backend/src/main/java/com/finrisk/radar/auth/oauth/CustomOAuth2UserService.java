@@ -57,8 +57,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	}
 
 	private User createGoogleUser(String email, String name, String providerId) {
-		if (userRepository.existsByEmail(email)) {
-			throw authenticationException("oauth_email_conflict");
+		User existingUser = userRepository.findByEmail(email).orElse(null);
+		if (existingUser != null) {
+			if (existingUser.getProvider() == AuthProvider.LOCAL) {
+				return existingUser;
+			}
+			throw authenticationException("oauth_account_conflict");
 		}
 
 		byte[] randomBytes = new byte[RANDOM_PASSWORD_BYTES];
