@@ -54,6 +54,14 @@ resource "aws_lb_target_group" "application" {
   deregistration_delay = 120
   slow_start           = 30
 
+  # Spring Security keeps the OAuth2 authorization request in the instance-local
+  # HTTP session. Keep the browser on the same target for the short OAuth round trip.
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 600
+    enabled         = true
+  }
+
   health_check {
     enabled             = true
     path                = "/readyz"
