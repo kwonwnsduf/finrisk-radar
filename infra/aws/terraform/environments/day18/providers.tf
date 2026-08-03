@@ -29,3 +29,8 @@ data "aws_ecr_repository" "frontend" {
 data "aws_s3_bucket" "application" {
   bucket = var.application_bucket_name
 }
+
+data "aws_route53_zone" "application" {
+  name         = var.hosted_zone_name
+  private_zone = false
+}

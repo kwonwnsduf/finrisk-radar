@@ -55,12 +55,62 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid     = "DeployToDay18Instance"
+    sid     = "DeployThroughSsm"
     actions = ["ssm:SendCommand"]
     resources = [
-      "arn:aws:ec2:${var.aws_region}:${var.aws_account_id}:instance/${var.instance_id}",
       "arn:aws:ssm:${var.aws_region}::document/AWS-RunShellScript"
     ]
+  }
+
+  statement {
+    sid     = "DeployToTaggedDay19Instances"
+    actions = ["ssm:SendCommand"]
+    resources = [
+      "arn:aws:ec2:${var.aws_region}:${var.aws_account_id}:instance/*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "ssm:resourceTag/FinriskDeployment"
+      values   = ["day19"]
+    }
+  }
+
+  statement {
+    sid       = "DeployToRuntimeInstance"
+    actions   = ["ssm:SendCommand"]
+    resources = ["arn:aws:ec2:${var.aws_region}:${var.aws_account_id}:instance/${var.runtime_instance_id}"]
+  }
+
+  statement {
+    sid = "ManageDay19StandbyDeployments"
+    actions = [
+      "autoscaling:EnterStandby",
+      "autoscaling:ExitStandby"
+    ]
+    resources = [
+      "arn:aws:autoscaling:${var.aws_region}:${var.aws_account_id}:autoScalingGroup:*:autoScalingGroupName/${var.application_asg_name}"
+    ]
+  }
+
+  statement {
+    sid = "ReadDay19FleetState"
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups",
+      "autoscaling:DescribeAutoScalingInstances",
+      "autoscaling:DescribeScalingActivities",
+      "elasticloadbalancing:DescribeTargetHealth"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "PromoteDay19Release"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:PutParameter"
+    ]
+    resources = var.release_parameter_arns
   }
 
   statement {

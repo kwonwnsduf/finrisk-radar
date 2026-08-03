@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "runtime" {
       "ssm:GetParameter",
       "ssm:GetParameters"
     ]
-    resources = values(var.secret_parameter_arns)
+    resources = concat(values(var.secret_parameter_arns), var.release_parameter_arns)
   }
 
   statement {
@@ -110,7 +110,7 @@ resource "aws_instance" "this" {
 
   associate_public_ip_address = true
   user_data_base64            = filebase64("${path.module}/files/bootstrap.sh")
-  user_data_replace_on_change = true
+  user_data_replace_on_change = false
 
   metadata_options {
     http_endpoint          = "enabled"
@@ -126,14 +126,25 @@ resource "aws_instance" "this" {
   }
 
   tags = {
-    Name                      = "${var.name_prefix}-app"
-    FinriskDbAddress          = var.db_address
+    Name                     = "${var.name_prefix}-app"
+    FinriskDbAddress         = var.db_address
     FinriskApplicationBucket = var.application_bucket_name
-    FinriskGoogleClientId     = var.google_client_id
-    FinriskTossClientKey      = var.toss_widget_client_key
-    FinriskNaverClientId      = var.naver_client_id
-    FinriskOpenAiModel        = var.openai_llm_model
-    FinriskContainerLogGroup  = var.container_log_group_name
+    FinriskGoogleClientId    = var.google_client_id
+    FinriskTossClientKey     = var.toss_widget_client_key
+    FinriskNaverClientId     = var.naver_client_id
+    FinriskOpenAiModel       = var.openai_llm_model
+    FinriskContainerLogGroup = var.container_log_group_name
+    FinriskPublicBaseUrl     = var.public_base_url
+    FinriskDeployment        = "day19"
+    FinriskRole              = "runtime"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      ami,
+      user_data_base64
+    ]
   }
 
   depends_on = [

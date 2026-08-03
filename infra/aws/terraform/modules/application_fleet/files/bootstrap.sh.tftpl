@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+exec > >(tee -a /var/log/finrisk-bootstrap.log) 2>&1
+
+dnf install -y docker jq
+systemctl enable --now docker
+
+mkdir -p /usr/local/lib/docker/cli-plugins /opt/finrisk
+compose_release=https://github.com/docker/compose/releases/download/v2.32.4
+curl -fsSL "$compose_release/docker-compose-linux-x86_64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+
+cloudwatch_release=https://amazoncloudwatch-agent.s3.amazonaws.com
+curl -fsSL "$cloudwatch_release/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm" \
+  -o /tmp/amazon-cloudwatch-agent.rpm
+rpm -U /tmp/amazon-cloudwatch-agent.rpm || rpm -q amazon-cloudwatch-agent
+
+release=$(aws ssm get-parameter \
+  --region "${aws_region}" \
+  --name "${current_release_parameter_name}" \
+  --query Parameter.Value \
+  --output text)
+
+if [[ "$release" == "UNSET" ]]; then
+  echo "The approved Day 19 release is not initialized." >&2
+  exit 1
+fi
+
+backend_image=$(jq -er .backend_image <<<"$release")
+frontend_image=$(jq -er .frontend_image <<<"$release")
+source_ref=$(jq -er .source_ref <<<"$release")
+
+script_url="https://raw.githubusercontent.com/kwonwnsduf/finrisk-radar/$source_ref/infra/aws/scripts/deploy-day19-via-ssm.sh"
+curl -fsSL "$script_url" -o /tmp/finrisk-day19-deploy.sh
+chmod 0700 /tmp/finrisk-day19-deploy.sh
+/tmp/finrisk-day19-deploy.sh application "$backend_image" "$frontend_image" "$source_ref"

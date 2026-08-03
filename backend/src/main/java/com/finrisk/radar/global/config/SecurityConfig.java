@@ -74,6 +74,7 @@ public class SecurityConfig {
                         "/oauth2/authorization/google",
                         "/login/oauth2/code/google",
                         "/api/health",
+                        "/readyz",
                         "/actuator/health",
                         "/actuator/prometheus",
                         "/swagger-ui.html",

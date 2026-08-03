@@ -48,6 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
           + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
           + "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration",
       "management.health.diskspace.enabled=false",
+      "app.worker.enabled=false",
       "spring.kafka.listener.auto-startup=false",
       "jwt.secret=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
       "jwt.access-token-expiration=30m",
@@ -151,6 +152,15 @@ class BackendApplicationTests {
         .perform(get("/actuator/health"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("UP"));
+  }
+
+  @Test
+  void readinessIsExposedWithoutDetails() throws Exception {
+    mockMvc
+        .perform(get("/readyz"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("UP"))
+        .andExpect(jsonPath("$.components").doesNotExist());
   }
 
   @Test

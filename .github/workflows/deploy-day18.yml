@@ -2,13 +2,6 @@ name: Deploy Day18 to AWS
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - backend/**
-      - frontend/**
-      - infra/aws/scripts/deploy-day18-via-ssm.sh
-      - .github/workflows/deploy-day18.yml
 
 concurrency:
   group: finrisk-day18-deploy
@@ -55,13 +48,25 @@ jobs:
           registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
           image_tag="sha-$(git log -1 --format=%H -- backend frontend)"
 
-          if ! aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids "imageTag=$image_tag" >/dev/null 2>&1; then
-            docker build --provenance=false -f backend/Dockerfile -t "$registry/$BACKEND_REPOSITORY:$image_tag" backend
+          if ! aws ecr describe-images \
+            --repository-name "$BACKEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" >/dev/null 2>&1
+          then
+            docker build \
+              --provenance=false \
+              -f backend/Dockerfile \
+              -t "$registry/$BACKEND_REPOSITORY:$image_tag" \
+              backend
             docker push "$registry/$BACKEND_REPOSITORY:$image_tag"
           fi
 
-          if ! aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids "imageTag=$image_tag" >/dev/null 2>&1; then
-            docker build --provenance=false -f frontend/Dockerfile \
+          if ! aws ecr describe-images \
+            --repository-name "$FRONTEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" >/dev/null 2>&1
+          then
+            docker build \
+              --provenance=false \
+              -f frontend/Dockerfile \
               --build-arg NEXT_PUBLIC_API_BASE_URL= \
               --build-arg NEXT_PUBLIC_OAUTH_BASE_URL= \
               --build-arg "NEXT_PUBLIC_TOSS_CLIENT_KEY=$TOSS_WIDGET_CLIENT_KEY" \
@@ -75,10 +80,30 @@ jobs:
           set -Eeuo pipefail
           registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
           image_tag="sha-$(git log -1 --format=%H -- backend frontend)"
-          backend_digest=$(aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" --image-ids "imageTag=$image_tag" --query 'imageDetails[0].imageDigest' --output text)
-          frontend_digest=$(aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" --image-ids "imageTag=$image_tag" --query 'imageDetails[0].imageDigest' --output text)
-          instance_id=$(aws ec2 describe-instances --filters Name=tag:Name,Values=finrisk-day18-app Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text)
-          public_ip=$(aws ec2 describe-instances --instance-ids "$instance_id" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          image_query='imageDetails[0].imageDigest'
+
+          backend_digest=$(aws ecr describe-images \
+            --repository-name "$BACKEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" \
+            --query "$image_query" \
+            --output text)
+          frontend_digest=$(aws ecr describe-images \
+            --repository-name "$FRONTEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" \
+            --query "$image_query" \
+            --output text)
+
+          instance_query='Reservations[0].Instances[0]'
+          instance_id=$(aws ec2 describe-instances \
+            --filters \
+              Name=tag:Name,Values=finrisk-day18-app \
+              Name=instance-state-name,Values=running \
+            --query "$instance_query.InstanceId" \
+            --output text)
+          public_ip=$(aws ec2 describe-instances \
+            --instance-ids "$instance_id" \
+            --query "$instance_query.PublicIpAddress" \
+            --output text)
 
           test "$instance_id" != "None"
           {
@@ -96,35 +121,75 @@ jobs:
         run: |
           set -Eeuo pipefail
           for attempt in $(seq 1 30); do
-            ping_status=$(aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$INSTANCE_ID" --query 'InstanceInformationList[0].PingStatus' --output text)
+            ping_status=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+              --query 'InstanceInformationList[0].PingStatus' \
+              --output text)
             [[ "$ping_status" == "Online" ]] && break
-            [[ "$attempt" == "30" ]] && { echo "EC2 did not become SSM Online" >&2; exit 1; }
+            if [[ "$attempt" == "30" ]]; then
+              echo "EC2 did not become SSM Online" >&2
+              exit 1
+            fi
             sleep 10
           done
 
-          script_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/infra/aws/scripts/deploy-day18-via-ssm.sh"
-          remote_command="curl -fsSL '$script_url' -o /tmp/finrisk-day18-deploy.sh && chmod 0700 /tmp/finrisk-day18-deploy.sh && sudo /tmp/finrisk-day18-deploy.sh '$BACKEND_IMAGE' '$FRONTEND_IMAGE' '$GITHUB_SHA'"
-          jq -n --arg command "$remote_command" '{commands: [$command]}' > ssm-parameters.json
-          command_id=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name AWS-RunShellScript --parameters file://ssm-parameters.json --query 'Command.CommandId' --output text)
+          script_path=infra/aws/scripts/deploy-day18-via-ssm.sh
+          script_url="https://raw.githubusercontent.com/"
+          script_url+="$GITHUB_REPOSITORY/$GITHUB_SHA/$script_path"
 
+          remote_script=/tmp/finrisk-day18-deploy.sh
+          remote_command="curl -fsSL '$script_url' -o $remote_script"
+          remote_command+=" && chmod 0700 $remote_script"
+          remote_command+=" && sudo $remote_script"
+          remote_command+=" '$BACKEND_IMAGE' '$FRONTEND_IMAGE' '$GITHUB_SHA'"
+
+          jq -n \
+            --arg command "$remote_command" \
+            '{commands: [$command]}' > ssm-parameters.json
+          command_id=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --parameters file://ssm-parameters.json \
+            --query 'Command.CommandId' \
+            --output text)
+
+          result_query='{Status:Status,Output:StandardOutputContent,'
+          result_query+='Error:StandardErrorContent}'
           for attempt in $(seq 1 90); do
-            command_status=$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query Status --output text)
+            command_status=$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$INSTANCE_ID" \
+              --query Status \
+              --output text)
             case "$command_status" in
               Success) break ;;
               Failed|Cancelled|TimedOut|Cancelling)
-                aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' --output json
+                aws ssm get-command-invocation \
+                  --command-id "$command_id" \
+                  --instance-id "$INSTANCE_ID" \
+                  --query "$result_query" \
+                  --output json
                 exit 1
                 ;;
             esac
-            [[ "$attempt" == "90" ]] && { echo "SSM deployment did not finish within 15 minutes" >&2; exit 1; }
+            if [[ "$attempt" == "90" ]]; then
+              echo "SSM deployment did not finish within 15 minutes" >&2
+              exit 1
+            fi
             sleep 10
           done
 
-          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' --output json
+          aws ssm get-command-invocation \
+            --command-id "$command_id" \
+            --instance-id "$INSTANCE_ID" \
+            --query "$result_query" \
+            --output json
 
       - name: Verify public health
         env:
           PUBLIC_IP: ${{ steps.release.outputs.public_ip }}
         run: |
-          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "http://$PUBLIC_IP/"
-          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "http://$PUBLIC_IP/actuator/health"
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors \
+            "http://$PUBLIC_IP/"
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors \
+            "http://$PUBLIC_IP/actuator/health"

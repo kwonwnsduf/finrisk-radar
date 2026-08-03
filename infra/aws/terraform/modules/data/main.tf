@@ -40,13 +40,18 @@ resource "aws_db_instance" "this" {
   monitoring_interval             = 0
   auto_minor_version_upgrade      = true
   apply_immediately               = true
-  deletion_protection             = false
-  skip_final_snapshot             = true
+  deletion_protection             = true
+  skip_final_snapshot             = false
+  final_snapshot_identifier       = "${var.name_prefix}-postgres-final"
   delete_automated_backups        = true
   enabled_cloudwatch_logs_exports = []
   copy_tags_to_snapshot           = true
 
   tags = { Name = "${var.name_prefix}-postgres" }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_cloudwatch_log_group" "containers" {

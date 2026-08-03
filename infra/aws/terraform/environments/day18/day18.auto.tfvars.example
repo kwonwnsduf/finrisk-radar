@@ -15,3 +15,11 @@ application_kms_key_arn = null
 common_tags = {
   Service = "finrisk-radar"
 }
+
+hosted_zone_name        = "fin-risk.com"
+application_domain_name = "app.fin-risk.com"
+
+# Keep false for the first apply. Run the Day 19 workflow in release-only mode,
+# then switch this to true and apply again to launch the two application hosts.
+application_fleet_enabled = false
+legacy_direct_http_enabled = true

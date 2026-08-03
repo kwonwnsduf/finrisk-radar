@@ -1,0 +1,265 @@
+name: Deploy Day19 to AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_only:
+        description: Initialize the approved release before enabling the ASG
+        type: boolean
+        default: false
+
+concurrency:
+  group: finrisk-day19-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-2
+  AWS_ACCOUNT_ID: "422060263480"
+  BACKEND_REPOSITORY: finrisk-backend
+  FRONTEND_REPOSITORY: finrisk-frontend
+  APPLICATION_ASG: finrisk-day18-application
+  CURRENT_RELEASE_PARAMETER: /finrisk/day19/releases/current
+  PREVIOUS_RELEASE_PARAMETER: /finrisk/day19/releases/previous
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Test backend
+        working-directory: backend
+        run: ./gradlew test
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Test frontend
+        working-directory: frontend
+        run: |
+          pnpm test
+          pnpm typecheck
+          pnpm lint
+
+      - name: Require public build configuration
+        env:
+          TOSS_WIDGET_CLIENT_KEY: ${{ vars.TOSS_WIDGET_CLIENT_KEY }}
+        run: test -n "$TOSS_WIDGET_CLIENT_KEY"
+
+      - name: Authenticate to AWS with OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::422060263480:role/finrisk-day18-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push immutable images
+        env:
+          TOSS_WIDGET_CLIENT_KEY: ${{ vars.TOSS_WIDGET_CLIENT_KEY }}
+        run: |
+          set -Eeuo pipefail
+          registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          image_tag="sha-$GITHUB_SHA"
+
+          if ! aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" >/dev/null 2>&1
+          then
+            docker build --provenance=false -f backend/Dockerfile \
+              -t "$registry/$BACKEND_REPOSITORY:$image_tag" backend
+            docker push "$registry/$BACKEND_REPOSITORY:$image_tag"
+          fi
+
+          if ! aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" >/dev/null 2>&1
+          then
+            docker build --provenance=false -f frontend/Dockerfile \
+              --build-arg NEXT_PUBLIC_API_BASE_URL= \
+              --build-arg NEXT_PUBLIC_OAUTH_BASE_URL= \
+              --build-arg "NEXT_PUBLIC_TOSS_CLIENT_KEY=$TOSS_WIDGET_CLIENT_KEY" \
+              -t "$registry/$FRONTEND_REPOSITORY:$image_tag" frontend
+            docker push "$registry/$FRONTEND_REPOSITORY:$image_tag"
+          fi
+
+      - name: Resolve immutable release
+        id: release
+        run: |
+          set -Eeuo pipefail
+          registry="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          image_tag="sha-$GITHUB_SHA"
+          query='imageDetails[0].imageDigest'
+          backend_digest=$(aws ecr describe-images --repository-name "$BACKEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" --query "$query" --output text)
+          frontend_digest=$(aws ecr describe-images --repository-name "$FRONTEND_REPOSITORY" \
+            --image-ids "imageTag=$image_tag" --query "$query" --output text)
+          release=$(jq -cn \
+            --arg release_id "run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --arg source_ref "$GITHUB_SHA" \
+            --arg backend_image "$registry/$BACKEND_REPOSITORY@$backend_digest" \
+            --arg frontend_image "$registry/$FRONTEND_REPOSITORY@$frontend_digest" \
+            '{release_id:$release_id,source_ref:$source_ref,backend_image:$backend_image,frontend_image:$frontend_image}')
+          echo "manifest=$release" >> "$GITHUB_OUTPUT"
+
+      - name: Initialize approved release
+        if: ${{ inputs.release_only == true }}
+        env:
+          CANDIDATE: ${{ steps.release.outputs.manifest }}
+        run: |
+          set -Eeuo pipefail
+          current=$(aws ssm get-parameter --name "$CURRENT_RELEASE_PARAMETER" \
+            --query Parameter.Value --output text)
+          if [[ "$current" != "UNSET" ]]; then
+            aws ssm put-parameter --name "$PREVIOUS_RELEASE_PARAMETER" \
+              --type String --overwrite --value "$current" >/dev/null
+          fi
+          aws ssm put-parameter --name "$CURRENT_RELEASE_PARAMETER" \
+            --type String --overwrite --value "$CANDIDATE" >/dev/null
+
+      - name: Roll out through ASG Standby
+        if: ${{ inputs.release_only != true }}
+        env:
+          CANDIDATE: ${{ steps.release.outputs.manifest }}
+        run: |
+          set -Eeuo pipefail
+          current=$(aws ssm get-parameter --name "$CURRENT_RELEASE_PARAMETER" \
+            --query Parameter.Value --output text)
+          [[ "$current" != "UNSET" ]] || { echo "Approved release is not initialized" >&2; exit 1; }
+
+          target_group_arn=$(aws autoscaling describe-auto-scaling-groups \
+            --auto-scaling-group-names "$APPLICATION_ASG" \
+            --query 'AutoScalingGroups[0].TargetGroupARNs[0]' --output text)
+          runtime_instance=$(aws ec2 describe-instances --filters \
+            Name=tag:FinriskDeployment,Values=day19 Name=tag:FinriskRole,Values=runtime \
+            Name=instance-state-name,Values=running \
+            --query 'Reservations[0].Instances[0].InstanceId' --output text)
+          [[ "$runtime_instance" != "None" ]]
+
+          wait_lifecycle() {
+            local instance_id="$1" expected="$2"
+            for _ in $(seq 1 120); do
+              state=$(aws autoscaling describe-auto-scaling-instances --instance-ids "$instance_id" \
+                --query 'AutoScalingInstances[0].LifecycleState' --output text)
+              [[ "$state" == "$expected" ]] && return 0
+              sleep 5
+            done
+            return 1
+          }
+
+          wait_target() {
+            local instance_id="$1" expected="$2"
+            for _ in $(seq 1 120); do
+              state=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" \
+                --targets "Id=$instance_id" \
+                --query 'TargetHealthDescriptions[0].TargetHealth.State' --output text 2>/dev/null || true)
+              [[ "$state" == "$expected" ]] && return 0
+              if [[ "$expected" == "unused" && "$state" == "None" ]]; then return 0; fi
+              sleep 5
+            done
+            return 1
+          }
+
+          ssm_deploy() {
+            local role="$1" instance_id="$2" manifest="$3"
+            local backend_image frontend_image source_ref script_url command command_id status
+            backend_image=$(jq -er .backend_image <<<"$manifest")
+            frontend_image=$(jq -er .frontend_image <<<"$manifest")
+            source_ref=$(jq -er .source_ref <<<"$manifest")
+            script_url="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$source_ref/infra/aws/scripts/deploy-day19-via-ssm.sh"
+            command="curl -fsSL '$script_url' -o /tmp/finrisk-day19-deploy.sh"
+            command+=" && chmod 0700 /tmp/finrisk-day19-deploy.sh"
+            command+=" && sudo /tmp/finrisk-day19-deploy.sh '$role' '$backend_image' '$frontend_image' '$source_ref'"
+            parameters=$(jq -cn --arg command "$command" '{commands:[$command]}')
+            command_id=$(aws ssm send-command --instance-ids "$instance_id" \
+              --document-name AWS-RunShellScript --parameters "$parameters" \
+              --query 'Command.CommandId' --output text)
+            for _ in $(seq 1 180); do
+              status=$(aws ssm get-command-invocation --command-id "$command_id" \
+                --instance-id "$instance_id" --query Status --output text)
+              case "$status" in
+                Success) return 0 ;;
+                Failed|Cancelled|TimedOut|Cancelling)
+                  aws ssm get-command-invocation --command-id "$command_id" \
+                    --instance-id "$instance_id" \
+                    --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}'
+                  return 1
+                  ;;
+              esac
+              sleep 5
+            done
+            return 1
+          }
+
+          rollout_instance() {
+            local instance_id="$1" manifest="$2"
+            aws autoscaling enter-standby --instance-ids "$instance_id" \
+              --auto-scaling-group-name "$APPLICATION_ASG" \
+              --should-decrement-desired-capacity >/dev/null
+            wait_lifecycle "$instance_id" Standby
+            wait_target "$instance_id" unused
+            if ! ssm_deploy application "$instance_id" "$manifest"; then
+              ssm_deploy application "$instance_id" "$current" || true
+              aws autoscaling exit-standby --instance-ids "$instance_id" \
+                --auto-scaling-group-name "$APPLICATION_ASG" >/dev/null || true
+              return 1
+            fi
+            aws autoscaling exit-standby --instance-ids "$instance_id" \
+              --auto-scaling-group-name "$APPLICATION_ASG" >/dev/null
+            wait_lifecycle "$instance_id" InService
+            wait_target "$instance_id" healthy
+          }
+
+          # shellcheck disable=SC2016
+          mapfile -t instances < <(aws autoscaling describe-auto-scaling-groups \
+            --auto-scaling-group-names "$APPLICATION_ASG" \
+            --query 'AutoScalingGroups[0].Instances[?LifecycleState==`InService`].InstanceId' \
+            --output text | tr '\t' '\n')
+          [[ "${#instances[@]}" -eq 2 ]] || { echo "Expected two InService instances" >&2; exit 1; }
+          # shellcheck disable=SC2016
+          application_url=$(aws ec2 describe-instances --instance-ids "${instances[0]}" \
+            --query 'Reservations[0].Instances[0].Tags[?Key==`FinriskPublicBaseUrl`].Value | [0]' \
+            --output text)
+          [[ "$application_url" == https://* ]] || { echo "Invalid application URL tag" >&2; exit 1; }
+          # shellcheck disable=SC2016
+          healthy_count=$(aws elbv2 describe-target-health --target-group-arn "$target_group_arn" \
+            --query 'length(TargetHealthDescriptions[?TargetHealth.State==`healthy`])' --output text)
+          [[ "$healthy_count" == "2" ]] || { echo "Expected two healthy targets" >&2; exit 1; }
+
+          deployed=()
+          for instance_id in "${instances[@]}"; do
+            if ! rollout_instance "$instance_id" "$CANDIDATE"; then
+              for ((index=${#deployed[@]}-1; index>=0; index--)); do
+                rollout_instance "${deployed[index]}" "$current" || true
+              done
+              exit 1
+            fi
+            deployed+=("$instance_id")
+          done
+
+          if ! ssm_deploy runtime "$runtime_instance" "$CANDIDATE"; then
+            ssm_deploy runtime "$runtime_instance" "$current" || true
+            for ((index=${#deployed[@]}-1; index>=0; index--)); do
+              rollout_instance "${deployed[index]}" "$current" || true
+            done
+            exit 1
+          fi
+
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "$application_url/"
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "$application_url/readyz"
+          curl --fail --retry 12 --retry-delay 10 --retry-all-errors "$application_url/actuator/health"
+
+          aws ssm put-parameter --name "$PREVIOUS_RELEASE_PARAMETER" \
+            --type String --overwrite --value "$current" >/dev/null
+          aws ssm put-parameter --name "$CURRENT_RELEASE_PARAMETER" \
+            --type String --overwrite --value "$CANDIDATE" >/dev/null

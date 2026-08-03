@@ -26,3 +26,8 @@ variable "private_subnet_cidrs" {
 variable "allowed_http_cidrs" {
   type = list(string)
 }
+
+variable "legacy_direct_http_enabled" {
+  type    = bool
+  default = true
+}

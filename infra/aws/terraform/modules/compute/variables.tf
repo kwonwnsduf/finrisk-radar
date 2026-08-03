@@ -76,3 +76,12 @@ variable "naver_client_id" {
 variable "openai_llm_model" {
   type = string
 }
+
+variable "public_base_url" {
+  type = string
+}
+
+variable "release_parameter_arns" {
+  type    = list(string)
+  default = []
+}

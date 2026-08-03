@@ -91,3 +91,42 @@ variable "github_branch" {
   type        = string
   default     = "main"
 }
+
+variable "hosted_zone_name" {
+  description = "Existing public Route 53 hosted zone used for the application record."
+  type        = string
+  default     = "fin-risk.com"
+}
+
+variable "application_domain_name" {
+  description = "Public HTTPS hostname for FinRisk Radar."
+  type        = string
+  default     = "app.fin-risk.com"
+}
+
+variable "application_fleet_enabled" {
+  description = "Enable only after the current Day 19 release parameter has been initialized."
+  type        = bool
+  default     = false
+}
+
+variable "application_min_size" {
+  type    = number
+  default = 1
+}
+
+variable "application_desired_capacity" {
+  type    = number
+  default = 2
+}
+
+variable "application_max_size" {
+  type    = number
+  default = 3
+}
+
+variable "legacy_direct_http_enabled" {
+  description = "Keep the original EC2 HTTP endpoint during the staged Day 19 cutover."
+  type        = bool
+  default     = true
+}

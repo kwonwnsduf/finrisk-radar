@@ -24,6 +24,14 @@ variable "ecr_repository_arns" {
   type = list(string)
 }
 
-variable "instance_id" {
+variable "runtime_instance_id" {
   type = string
+}
+
+variable "application_asg_name" {
+  type = string
+}
+
+variable "release_parameter_arns" {
+  type = list(string)
 }

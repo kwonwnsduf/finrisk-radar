@@ -36,6 +36,8 @@ jwt:
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:14d}
 
 app:
+  worker:
+    enabled: ${APP_WORKER_ENABLED:true}
   payment:
     enabled: ${PAYMENT_ENABLED:false}
     frontend-base-url: ${PAYMENT_FRONTEND_BASE_URL:http://localhost:3000}
@@ -165,6 +167,15 @@ app:
       max-context-characters: ${OPENAI_LLM_MAX_CONTEXT_CHARACTERS:24000}
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState
+          additional-path: server:/readyz
+          show-details: never
   prometheus:
     metrics:
       export:
