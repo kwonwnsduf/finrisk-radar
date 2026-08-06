@@ -22,9 +22,16 @@ html {
 
 body {
   margin: 0;
+  min-width: 0;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Noto Sans KR", Arial, sans-serif;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
 }
 
 button,

@@ -6,6 +6,10 @@ toss_widget_client_key = "replace-with-toss-widget-client-key"
 naver_client_id        = "replace-with-naver-client-id"
 openai_llm_model       = "replace-with-responses-api-model"
 
+# The runtime host also runs Kafka, Redis, Prometheus, and Grafana.
+runtime_instance_type     = "t3.medium"
+application_instance_type = "t3.small"
+
 # Restrict this to the operator IP when public portfolio access is unnecessary.
 allowed_http_cidrs = ["0.0.0.0/0"]
 

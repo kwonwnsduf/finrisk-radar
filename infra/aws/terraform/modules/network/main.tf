@@ -151,6 +151,24 @@ resource "aws_vpc_security_group_ingress_rule" "application_http" {
   ip_protocol                  = "tcp"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "application_metrics" {
+  security_group_id            = aws_security_group.application.id
+  description                  = "Prometheus scrape from the runtime host"
+  referenced_security_group_id = aws_security_group.ec2.id
+  from_port                    = 9100
+  to_port                      = 9100
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "runtime_metrics" {
+  security_group_id            = aws_security_group.ec2.id
+  description                  = "Runtime Prometheus to application metrics"
+  referenced_security_group_id = aws_security_group.application.id
+  from_port                    = 9100
+  to_port                      = 9100
+  ip_protocol                  = "tcp"
+}
+
 resource "aws_vpc_security_group_egress_rule" "http" {
   security_group_id = aws_security_group.ec2.id
   description       = "Package repositories and HTTP redirects"

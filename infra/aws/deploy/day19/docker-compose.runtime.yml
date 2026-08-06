@@ -142,11 +142,102 @@ services:
         awslogs-stream: runtime-worker-${INSTANCE_ID}
     networks: [finrisk]
 
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.88.0
+    restart: unless-stopped
+    mem_limit: 64m
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
+        awslogs-create-group: "false"
+        awslogs-stream: runtime-redis-exporter-${INSTANCE_ID}
+    networks: [finrisk]
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.9.0
+    restart: unless-stopped
+    mem_limit: 64m
+    command: ["--kafka.server=kafka:9092"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
+        awslogs-create-group: "false"
+        awslogs-stream: runtime-kafka-exporter-${INSTANCE_ID}
+    networks: [finrisk]
+
+  prometheus:
+    image: prom/prometheus:v3.5.4
+    restart: unless-stopped
+    mem_limit: 256m
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=1GB
+      - --web.enable-lifecycle
+    ports: ["127.0.0.1:9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      worker:
+        condition: service_healthy
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
+        awslogs-create-group: "false"
+        awslogs-stream: runtime-prometheus-${INSTANCE_ID}
+    networks: [finrisk]
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    restart: unless-stopped
+    mem_limit: 192m
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_ROOT_URL: http://127.0.0.1:3001
+    ports: ["127.0.0.1:3001:3000"]
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/finrisk.yml:ro
+      - ./grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/finrisk.yml:ro
+      - ./finrisk-aws-overview.json:/var/lib/grafana/dashboards/finrisk-aws-overview.json:ro
+    depends_on:
+      - prometheus
+    logging:
+      <<: *awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: ${CONTAINER_LOG_GROUP_NAME}
+        awslogs-create-group: "false"
+        awslogs-stream: runtime-grafana-${INSTANCE_ID}
+    networks: [finrisk]
+
 volumes:
   redis_data:
   zookeeper_data:
   zookeeper_log:
   kafka_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   finrisk:

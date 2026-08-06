@@ -34,7 +34,12 @@ variable "application_kms_key_arn" {
   default     = null
 }
 
-variable "instance_type" {
+variable "runtime_instance_type" {
+  type    = string
+  default = "t3.medium"
+}
+
+variable "application_instance_type" {
   type    = string
   default = "t3.small"
 }

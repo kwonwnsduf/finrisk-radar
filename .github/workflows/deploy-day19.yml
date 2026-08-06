@@ -76,6 +76,15 @@ jobs:
           aws s3 cp infra/aws/deploy/day19/docker-compose.runtime.yml "$artifact_base/docker-compose.runtime.yml"
           aws s3 cp infra/aws/deploy/day19/cloudwatch-agent.json "$artifact_base/cloudwatch-agent.json"
           aws s3 cp infra/nginx/nginx.conf "$artifact_base/nginx.conf"
+          for monitoring_file in \
+            prometheus.yml \
+            grafana-datasource.yml \
+            grafana-dashboard-provider.yml \
+            finrisk-aws-overview.json
+          do
+            aws s3 cp "infra/aws/deploy/day19/$monitoring_file" \
+              "$artifact_base/$monitoring_file"
+          done
 
       - name: Build and push immutable images
         env:

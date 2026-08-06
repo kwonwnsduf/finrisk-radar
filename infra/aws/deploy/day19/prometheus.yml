@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: runtime-worker
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["worker:8080"]
+        labels:
+          role: runtime-worker
+
+  - job_name: application-backend
+    metrics_path: /actuator/prometheus
+    ec2_sd_configs:
+      - region: ap-northeast-2
+        port: 9100
+        refresh_interval: 30s
+        filters:
+          - name: tag:FinriskDeployment
+            values: ["day19"]
+          - name: tag:FinriskRole
+            values: ["application"]
+          - name: instance-state-name
+            values: ["running"]
+    relabel_configs:
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+      - source_labels: [__meta_ec2_availability_zone]
+        target_label: availability_zone
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: ec2_name
+      - target_label: role
+        replacement: application
+
+  - job_name: redis
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  - job_name: kafka
+    static_configs:
+      - targets: ["kafka-exporter:9308"]

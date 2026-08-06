@@ -1,0 +1,27 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {"type":"stat","title":"Healthy scrape targets","gridPos":{"h":4,"w":6,"x":0,"y":0},"targets":[{"expr":"sum(up)","refId":"A"}]},
+    {"type":"stat","title":"Application instances","gridPos":{"h":4,"w":6,"x":6,"y":0},"targets":[{"expr":"sum(up{job=\"application-backend\"})","refId":"A"}]},
+    {"type":"stat","title":"Redis up","gridPos":{"h":4,"w":6,"x":12,"y":0},"targets":[{"expr":"max(redis_up)","refId":"A"}]},
+    {"type":"stat","title":"Kafka brokers","gridPos":{"h":4,"w":6,"x":18,"y":0},"targets":[{"expr":"max(kafka_brokers)","refId":"A"}]},
+    {"type":"timeseries","title":"API request rate","gridPos":{"h":8,"w":8,"x":0,"y":4},"targets":[{"expr":"sum(rate(http_server_requests_seconds_count[5m])) by (job, status)","legendFormat":"{{job}} {{status}}","refId":"A"}]},
+    {"type":"timeseries","title":"API p95 latency","gridPos":{"h":8,"w":8,"x":8,"y":4},"targets":[{"expr":"histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (job, le))","legendFormat":"{{job}} p95","refId":"A"}]},
+    {"type":"timeseries","title":"JVM heap used","gridPos":{"h":8,"w":8,"x":16,"y":4},"targets":[{"expr":"sum(jvm_memory_used_bytes{area=\"heap\"}) by (job, instance_id)","legendFormat":"{{job}} {{instance_id}}","refId":"A"}]},
+    {"type":"timeseries","title":"Worker outcomes","gridPos":{"h":8,"w":8,"x":0,"y":12},"targets":[{"expr":"sum(rate(worker_execution_total[5m])) by (domain, outcome)","legendFormat":"{{domain}} {{outcome}}","refId":"A"}]},
+    {"type":"timeseries","title":"Redis memory","gridPos":{"h":8,"w":8,"x":8,"y":12},"targets":[{"expr":"redis_memory_used_bytes","legendFormat":"used","refId":"A"},{"expr":"redis_memory_max_bytes","legendFormat":"max","refId":"B"}]},
+    {"type":"timeseries","title":"Kafka consumer lag","gridPos":{"h":8,"w":8,"x":16,"y":12},"targets":[{"expr":"sum(kafka_consumergroup_lag)","legendFormat":"lag","refId":"A"}]},
+    {"type":"timeseries","title":"LLM and report failures","gridPos":{"h":8,"w":12,"x":0,"y":20},"targets":[{"expr":"sum(rate(llm_calls_total[5m]))","legendFormat":"LLM calls","refId":"A"},{"expr":"sum(rate(report_failed_total[5m]))","legendFormat":"Report failures","refId":"B"}]},
+    {"type":"timeseries","title":"Payment and outbox failures","gridPos":{"h":8,"w":12,"x":12,"y":20},"targets":[{"expr":"sum(rate(payment_confirm_failed_total[5m]))","legendFormat":"Payment confirm failures","refId":"A"},{"expr":"sum(rate(outbox_publish_failed_total[5m]))","legendFormat":"Outbox failures","refId":"B"}]}
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["finrisk", "aws", "day19"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "title": "FinRisk AWS Overview",
+  "uid": "finrisk-aws-overview",
+  "version": 1
+}

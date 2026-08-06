@@ -14,6 +14,9 @@ import { useUiStore } from "@/store/ui-store";
 
 export function Header() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const toggleMobileSidebar = useUiStore(
+    (state) => state.toggleMobileSidebar,
+  );
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -34,8 +37,18 @@ export function Header() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 md:px-8">
-      <div className="flex items-center gap-3">
+    <header className="flex h-16 min-w-0 items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 sm:px-5 md:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={toggleMobileSidebar}
+          aria-label="Open navigation"
+          className="shrink-0 md:hidden"
+        >
+          <Menu className="size-5" />
+        </Button>
         <Button
           type="button"
           size="icon"
@@ -46,19 +59,23 @@ export function Header() {
         >
           <Menu className="size-5" />
         </Button>
-        <div>
-          <h1 className="text-base font-bold text-slate-950">Dashboard</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-base font-bold text-slate-950">
+            Dashboard
+          </h1>
           <p className="hidden text-xs text-slate-500 sm:block">
             Monitor your financial risk status at a glance.
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <NotificationBell />
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
-          <p className="text-xs text-slate-500">{user?.email}</p>
+          <p className="max-w-48 truncate text-xs text-slate-500">
+            {user?.email}
+          </p>
         </div>
         <Button
           type="button"
@@ -66,9 +83,13 @@ export function Header() {
           variant="ghost"
           onClick={handleLogout}
           disabled={isLoggingOut}
+          className="px-2 sm:px-3"
+          aria-label={isLoggingOut ? "Logging out" : "Log out"}
         >
           <LogOut className="size-4" aria-hidden="true" />
-          {isLoggingOut ? "Logging out…" : "Log out"}
+          <span className="hidden sm:inline">
+            {isLoggingOut ? "Logging out…" : "Log out"}
+          </span>
         </Button>
       </div>
     </header>

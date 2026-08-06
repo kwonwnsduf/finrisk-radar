@@ -91,7 +91,7 @@ module "compute" {
   aws_region        = var.aws_region
   subnet_id         = module.network.public_subnet_ids[0]
   security_group_id = module.network.ec2_security_group_id
-  instance_type     = var.instance_type
+  instance_type     = var.runtime_instance_type
   root_volume_size  = 20
 
   ecr_repository_arns = [
@@ -143,7 +143,7 @@ module "application_fleet" {
   security_group_id              = module.network.application_security_group_id
   iam_instance_profile_name      = module.compute.iam_instance_profile_name
   target_group_arn               = module.load_balancing.target_group_arn
-  instance_type                  = var.instance_type
+  instance_type                  = var.application_instance_type
   root_volume_size               = 20
   enabled                        = var.application_fleet_enabled
   min_size                       = var.application_min_size

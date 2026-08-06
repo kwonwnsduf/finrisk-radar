@@ -25,6 +25,7 @@ services:
       REDIS_PORT: 6379
       KAFKA_BOOTSTRAP_SERVERS: ${RUNTIME_HOST}:9092
     expose: ["8080"]
+    ports: ["9100:8080"]
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/readyz"]
       interval: 10s
