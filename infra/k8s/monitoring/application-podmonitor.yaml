@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: finrisk-spring
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: finrisk-radar
+spec:
+  namespaceSelector:
+    matchNames:
+      - finrisk
+  selector:
+    matchLabels:
+      finrisk.io/metrics: spring
+  podMetricsEndpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s

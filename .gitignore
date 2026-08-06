@@ -48,3 +48,8 @@ crash.*.log
 tmp/
 temp/
 *.tmp
+
+# Day20 local Kubernetes secrets and generated kubeconfig
+infra/k8s/secrets/.env.k3s
+infra/k8s/secrets/*.secret.yaml
+infra/k8s/.kubeconfig*

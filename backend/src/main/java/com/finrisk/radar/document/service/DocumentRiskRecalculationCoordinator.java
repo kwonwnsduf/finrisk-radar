@@ -8,7 +8,6 @@ import com.finrisk.radar.risk.service.RiskCalculationRequestService;
 import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -38,7 +37,6 @@ public class DocumentRiskRecalculationCoordinator {
     request(e.candidateId(), e.assetId(), e.reviewerUserId());
   }
 
-  @Scheduled(fixedDelayString = "${app.documents.recalculation-retry-delay:60000}")
   public void retry() {
     for (CreditEventCandidate c :
         candidates.findByStatusAndRecalculationStatus(

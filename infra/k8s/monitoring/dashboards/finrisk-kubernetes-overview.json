@@ -1,0 +1,29 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"type":"stat","title":"Ready application pods","gridPos":{"h":4,"w":6,"x":0,"y":0},"targets":[{"expr":"sum(kube_pod_status_ready{namespace=\"finrisk\",condition=\"true\"})","refId":"A"}]},
+    {"type":"stat","title":"Backend HPA replicas","gridPos":{"h":4,"w":6,"x":6,"y":0},"targets":[{"expr":"kube_horizontalpodautoscaler_status_current_replicas{namespace=\"finrisk\",horizontalpodautoscaler=\"backend\"}","refId":"A"}]},
+    {"type":"stat","title":"Pod restarts","gridPos":{"h":4,"w":6,"x":12,"y":0},"targets":[{"expr":"sum(increase(kube_pod_container_status_restarts_total{namespace=\"finrisk\"}[1h]))","refId":"A"}]},
+    {"type":"stat","title":"Kafka consumer lag","gridPos":{"h":4,"w":6,"x":18,"y":0},"targets":[{"expr":"sum(kafka_consumergroup_lag)","refId":"A"}]},
+    {"type":"timeseries","title":"API request rate","gridPos":{"h":8,"w":8,"x":0,"y":4},"targets":[{"expr":"sum(rate(http_server_requests_seconds_count{namespace=\"finrisk\"}[5m])) by (status)","legendFormat":"{{status}}","refId":"A"}]},
+    {"type":"timeseries","title":"API p95 latency","gridPos":{"h":8,"w":8,"x":8,"y":4},"targets":[{"expr":"histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{namespace=\"finrisk\"}[5m])) by (le))","legendFormat":"p95","refId":"A"}]},
+    {"type":"timeseries","title":"JVM heap","gridPos":{"h":8,"w":8,"x":16,"y":4},"targets":[{"expr":"sum(jvm_memory_used_bytes{namespace=\"finrisk\",area=\"heap\"}) by (pod)","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Pod CPU","gridPos":{"h":8,"w":8,"x":0,"y":12},"targets":[{"expr":"sum(rate(container_cpu_usage_seconds_total{namespace=\"finrisk\",container!=\"\"}[5m])) by (pod)","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Pod memory","gridPos":{"h":8,"w":8,"x":8,"y":12},"targets":[{"expr":"sum(container_memory_working_set_bytes{namespace=\"finrisk\",container!=\"\"}) by (pod)","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Redis memory","gridPos":{"h":8,"w":8,"x":16,"y":12},"targets":[{"expr":"redis_memory_used_bytes","legendFormat":"used","refId":"A"},{"expr":"redis_memory_max_bytes","legendFormat":"max","refId":"B"}]},
+    {"type":"timeseries","title":"Risk and Backtest outcomes","gridPos":{"h":8,"w":12,"x":0,"y":20},"targets":[{"expr":"sum(rate(worker_execution_total[5m])) by (domain,outcome)","legendFormat":"{{domain}} {{outcome}}","refId":"A"}]},
+    {"type":"timeseries","title":"LLM calls and failures","gridPos":{"h":8,"w":12,"x":12,"y":20},"targets":[{"expr":"sum(rate(llm_calls_total[5m]))","legendFormat":"calls","refId":"A"},{"expr":"sum(rate(report_failed_total[5m]))","legendFormat":"report failed","refId":"B"}]},
+    {"type":"timeseries","title":"Payment and FSD","gridPos":{"h":8,"w":12,"x":0,"y":28},"targets":[{"expr":"sum(rate(payment_order_created_total[5m]))","legendFormat":"orders","refId":"A"},{"expr":"sum(rate(fsd_blocked_total[5m]))","legendFormat":"blocked","refId":"B"},{"expr":"sum(rate(outbox_publish_failed_total[5m]))","legendFormat":"outbox failed","refId":"C"}]},
+    {"type":"table","title":"CronJob status","gridPos":{"h":8,"w":12,"x":12,"y":28},"targets":[{"expr":"kube_job_status_succeeded{namespace=\"finrisk\"}","format":"table","instant":true,"refId":"A"},{"expr":"kube_job_status_failed{namespace=\"finrisk\"}","format":"table","instant":true,"refId":"B"}]}
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["finrisk", "kubernetes", "day20"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "title": "FinRisk Kubernetes Overview",
+  "uid": "finrisk-kubernetes-overview",
+  "version": 1
+}

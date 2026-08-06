@@ -38,6 +38,9 @@ jwt:
 app:
   worker:
     enabled: ${APP_WORKER_ENABLED:true}
+  cron:
+    system-user-email: ${CRON_SYSTEM_USER_EMAIL:}
+    market-data-lookback-days: ${MARKET_DATA_CRON_LOOKBACK_DAYS:10}
   payment:
     enabled: ${PAYMENT_ENABLED:false}
     frontend-base-url: ${PAYMENT_FRONTEND_BASE_URL:http://localhost:3000}
@@ -147,6 +150,8 @@ app:
       cron: ${DOCUMENT_COLLECTION_SCHEDULER_CRON:0 0 * * * *}
     recalculation-retry-delay: ${DOCUMENT_RECALCULATION_RETRY_DELAY:60000}
     recalculation-max-attempts: ${DOCUMENT_RECALCULATION_MAX_ATTEMPTS:5}
+    recalculation-scheduler:
+      enabled: ${DOCUMENT_RECALCULATION_SCHEDULER_ENABLED:true}
   rag:
     openai:
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
